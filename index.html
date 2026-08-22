@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SISTEMA — Evolução Real</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e14;
+    --panel: #10161f;
+    --panel-2: #141c28;
+    --border: #1f2a38;
+    --gold: #e8b33d;
+    --gold-dim: #a67f2c;
+    --cyan: #4fd1ff;
+    --text: #e6edf3;
+    --text-dim: #7d8ba0;
+    --danger: #e5484d;
+    --ok: #3ecf8e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(circle at 20% -10%, #131b28 0%, var(--bg) 45%);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{ color: var(--cyan); }
+
+  /* ---------- Layout shells ---------- */
+  #app{ min-height:100vh; display:flex; flex-direction:column; }
+  .hidden{ display:none !important; }
+
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,14,20,0.6);
+    position: sticky; top:0; z-index:10;
+    backdrop-filter: blur(6px);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .dot{ width:9px; height:9px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px var(--gold); }
+  .brand span{ font-family:'JetBrains Mono', monospace; letter-spacing:3px; font-weight:700; font-size:13px; color: var(--text-dim); }
+  .user-chip{ display:flex; align-items:center; gap:10px; }
+  .user-chip img{ width:32px; height:32px; border-radius:50%; border:1px solid var(--border); }
+  .user-chip .name{ font-size:13px; color:var(--text-dim); }
+  button.ghost{
+    background:transparent; border:1px solid var(--border); color:var(--text-dim);
+    padding:7px 12px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'JetBrains Mono',monospace;
+    transition: all .15s;
+  }
+  button.ghost:hover{ border-color: var(--danger); color: var(--danger); }
+
+  /* ---------- Login view ---------- */
+  #login-view{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .status-window{
+    width:100%; max-width:380px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 36px 30px;
+    text-align:center;
+    box-shadow: 0 0 0 1px rgba(232,179,61,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    position:relative;
+    overflow:hidden;
+  }
+  .status-window::before{
+    content:''; position:absolute; inset:0; height:2px; top:0;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .status-window h1{
+    font-family:'JetBrains Mono', monospace; letter-spacing:4px; font-size:22px; font-weight:800;
+    color:var(--gold); margin-bottom:6px; text-transform:uppercase;
+  }
+  .status-window p.sub{ color:var(--text-dim); font-size:13px; margin-bottom:28px; line-height:1.5; }
+  .google-btn{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    width:100%; padding:12px 16px; border-radius:7px; border:1px solid var(--border);
+    background: var(--panel-2); color:var(--text); font-weight:600; font-size:14px; cursor:pointer;
+    transition: all .15s;
+  }
+  .google-btn:hover{ border-color: var(--cyan); box-shadow: 0 0 0 1px rgba(79,209,255,0.2); }
+  .google-btn svg{ width:18px; height:18px; }
+  #login-error{ color: var(--danger); font-size:12px; margin-top:14px; }
+
+  /* ---------- Dashboard ---------- */
+  main{ flex:1; width:100%; max-width:1040px; margin:0 auto; padding: 28px 20px 60px; }
+  .grid{ display:grid; grid-template-columns: 340px 1fr; gap:22px; align-items:start; }
+  @media (max-width: 800px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:22px;
+  }
+  .panel h2{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:3px; text-transform:uppercase;
+    color: var(--text-dim); margin-bottom:16px; display:flex; align-items:center; gap:8px;
+  }
+  .panel h2::before{ content:''; width:14px; height:1px; background:var(--gold-dim); }
+
+  /* status card */
+  .status-card{ text-align:center; }
+  .avatar-ring{
+    width:88px; height:88px; border-radius:50%; margin:0 auto 14px;
+    padding:3px; background: conic-gradient(var(--gold) var(--pct,0%), var(--border) 0);
+    transition: background 0.6s ease;
+  }
+  .avatar-ring img{ width:100%; height:100%; border-radius:50%; display:block; border:3px solid var(--panel); }
+  .status-card .name{ font-weight:700; font-size:16px; }
+  .level-block{ margin-top:18px; }
+  .level-num{ font-family:'JetBrains Mono',monospace; font-size:44px; font-weight:800; color:var(--gold); line-height:1; }
+  .level-label{ font-size:10px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-top:2px; }
+  .xp-bar-outer{
+    margin-top:16px; height:10px; border-radius:5px; background:var(--panel-2); border:1px solid var(--border); overflow:hidden;
+  }
+  .xp-bar-inner{
+    height:100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    width:0%; transition: width .6s ease;
+  }
+  .xp-text{ margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); }
+
+  .level-up-flash{
+    animation: flash 1s ease;
+  }
+  @keyframes flash{
+    0%{ box-shadow: 0 0 0 0 rgba(232,179,61,0.8); }
+    40%{ box-shadow: 0 0 40px 8px rgba(232,179,61,0.5); }
+    100%{ box-shadow: 0 0 0 0 rgba(232,179,61,0); }
+  }
+
+  /* quest log */
+  .quest-item{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 4px; border-bottom:1px solid var(--border);
+  }
+  .quest-item:last-child{ border-bottom:none; }
+  .quest-check{
+    width:22px; height:22px; border-radius:5px; border:1px solid var(--border);
+    background:var(--panel-2); cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--ok);
+    transition: all .15s;
+  }
+  .quest-check:hover{ border-color:var(--ok); }
+  .quest-check.done{ background: rgba(62,207,142,0.12); border-color:var(--ok); }
+  .quest-title{ flex:1; font-size:14px; }
+  .quest-item.done .quest-title{ color:var(--text-dim); text-decoration: line-through; }
+  .quest-xp{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--gold); }
+  .quest-del{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; }
+  .quest-del:hover{ color:var(--danger); }
+  .empty-note{ color:var(--text-dim); font-size:13px; padding:10px 4px; }
+
+  .add-quest-form{ display:flex; gap:8px; margin-top:14px; }
+  .add-quest-form input{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:9px 10px; font-size:13px; font-family:'Inter',sans-serif;
+  }
+  .add-quest-form input[name="title"]{ flex:1; }
+  .add-quest-form input[name="xp"]{ width:70px; }
+  .add-quest-form button{
+    background: var(--gold); color:#1a1204; border:none; border-radius:6px; padding:9px 14px;
+    font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .add-quest-form button:hover{ background:#f2c159; }
+
+  /* guild / friends */
+  .guild-row{
+    display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border);
+  }
+  .guild-row:last-child{ border-bottom:none; }
+  .guild-row img{ width:36px; height:36px; border-radius:50%; border:1px solid var(--border); }
+  .guild-row.me{ background: rgba(232,179,61,0.05); border-radius:8px; }
+  .guild-info{ flex:1; }
+  .guild-info .gname{ font-size:13px; font-weight:600; }
+  .guild-info .gname .you-tag{ color:var(--gold); font-size:10px; font-family:'JetBrains Mono',monospace; margin-left:6px; }
+  .mini-bar-outer{ height:5px; border-radius:3px; background:var(--panel-2); margin-top:5px; overflow:hidden; }
+  .mini-bar-inner{ height:100%; background:var(--cyan); }
+  .guild-level{ font-family:'JetBrains Mono',monospace; font-weight:800; color:var(--text-dim); font-size:13px; text-align:right; min-width:44px; }
+  .rank-num{ font-family:'JetBrains Mono',monospace; color:var(--text-dim); font-size:12px; width:16px; text-align:center; }
+
+  #toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--panel); border:1px solid var(--gold); color:var(--gold);
+    padding:10px 18px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px;
+    opacity:0; pointer-events:none; transition: opacity .3s, transform .3s; z-index:50;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- LOGIN -->
+  <div id="login-view">
+    <div class="status-window">
+      <h1>Sistema</h1>
+      <p class="sub">Sua evolução na vida real, medida em XP e nível.<br>Entre para acessar seu status.</p>
+      <button class="google-btn" id="google-login-btn">
+        <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.9 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16 4 9 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-1.8 14-4.9l-6.5-5.5C29.5 35.4 26.9 36 24 36c-5.4 0-9.9-3.1-11.3-7.9l-6.6 5.1C9 39.5 16 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.7 2.1-2 3.9-3.8 5.2l6.5 5.5C41.6 35.6 44 30.2 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        Entrar com Google
+      </button>
+      <p id="login-error"></p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard-view" class="hidden">
+    <header class="topbar">
+      <div class="brand"><span class="dot"></span><span>SISTEMA</span></div>
+      <div class="user-chip">
+        <img id="topbar-avatar" src="" alt="">
+        <span class="name" id="topbar-name"></span>
+        <button class="ghost" id="logout-btn">Sair</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid">
+        <!-- LEFT: status + quests -->
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div class="panel status-card" id="status-card">
+            <div class="avatar-ring" id="avatar-ring"><img id="status-avatar" src="" alt=""></div>
+            <div class="name" id="status-name"></div>
+            <div class="level-block">
+              <div class="level-num mono" id="level-num">1</div>
+              <div class="level-label">Nível</div>
+              <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar"></div></div>
+              <div class="xp-text" id="xp-text">0 / 100 XP</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Diário de Quests</h2>
+            <div id="quest-list"></div>
+            <form class="add-quest-form" id="add-quest-form">
+              <input type="text" name="title" placeholder="Nova quest diária..." required maxlength="60">
+              <input type="number" name="xp" placeholder="XP" required min="1" max="500" value="10">
+              <button type="submit">+</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- RIGHT: guild -->
+        <div class="panel">
+          <h2>Guilda</h2>
+          <div id="guild-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
+    query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  // ======= SUBSTITUA pelo config do SEU projeto Firebase =======
+const firebaseConfig = {
+  apiKey: "AIzaSyD6ny4iENhYyVg8PwIfCS5QA9KAPt6QxC0",
+  authDomain: "sistema-e90e8.firebaseapp.com",
+  projectId: "sistema-e90e8",
+  storageBucket: "sistema-e90e8.firebasestorage.app",
+  messagingSenderId: "898058892076",
+  appId: "1:898058892076:web:105ecf229f9dc47fd37289",
+  measurementId: "G-VZ0RQ4S4LC"
+};
+  // ================================================================
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  const XP_PER_LEVEL = 100; // XP necessário para cada nível (fixo e simples)
+
+  let currentUid = null;
+  let questsUnsub = null;
+  let guildUnsub = null;
+  let lastKnownLevel = 1;
+
+  function todayStr(){
+    return new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  }
+
+  function levelFromXp(xp){
+    return Math.floor(xp / XP_PER_LEVEL) + 1;
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  // ---------- AUTH ----------
+  document.getElementById('google-login-btn').addEventListener('click', async () => {
+    document.getElementById('login-error').textContent = '';
+    try{
+      await signInWithPopup(auth, provider);
+    }catch(err){
+      console.error(err);
+      document.getElementById('login-error').textContent = 'Erro ao entrar: ' + err.message;
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    if(questsUnsub){ questsUnsub(); questsUnsub = null; }
+    if(guildUnsub){ guildUnsub(); guildUnsub = null; }
+
+    if(!user){
+      currentUid = null;
+      document.getElementById('login-view').classList.remove('hidden');
+      document.getElementById('dashboard-view').classList.add('hidden');
+      return;
+    }
+
+    currentUid = user.uid;
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('dashboard-view').classList.remove('hidden');
+
+    document.getElementById('topbar-avatar').src = user.photoURL || '';
+    document.getElementById('topbar-name').textContent = user.displayName || 'Aventureiro';
+    document.getElementById('status-avatar').src = user.photoURL || '';
+    document.getElementById('status-name').textContent = user.displayName || 'Aventureiro';
+
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()){
+      await setDoc(userRef, {
+        name: user.displayName || 'Aventureiro',
+        photoURL: user.photoURL || '',
+        xp: 0,
+        createdAt: serverTimestamp()
+      });
+    } else {
+      // mantém nome/foto atualizados
+      await updateDoc(userRef, {
+        name: user.displayName || 'Aventureiro',
+        photoURL: user.photoURL || ''
+      });
+    }
+
+    // listener do próprio status (xp/nivel em tempo real)
+    onSnapshot(userRef, (docSnap) => {
+      const data = docSnap.data();
+      if(!data) return;
+      renderStatus(data.xp || 0);
+    });
+
+    // listener das quests do usuário
+    const questsCol = collection(db, 'users', user.uid, 'quests');
+    questsUnsub = onSnapshot(questsCol, (qsnap) => {
+      renderQuests(qsnap);
+    });
+
+    // listener da guilda (todos os usuários, ordenados por xp)
+    const guildQuery = query(collection(db, 'users'), orderBy('xp', 'desc'));
+    guildUnsub = onSnapshot(guildQuery, (gsnap) => {
+      renderGuild(gsnap);
+    });
+  });
+
+  // ---------- STATUS / XP ----------
+  function renderStatus(xp){
+    const level = levelFromXp(xp);
+    const xpIntoLevel = xp % XP_PER_LEVEL;
+    const pct = (xpIntoLevel / XP_PER_LEVEL) * 100;
+
+    document.getElementById('level-num').textContent = level;
+    document.getElementById('xp-bar').style.width = pct + '%';
+    document.getElementById('xp-text').textContent = `${xpIntoLevel} / ${XP_PER_LEVEL} XP`;
+    document.getElementById('avatar-ring').style.setProperty('--pct', pct + '%');
+
+    if(level > lastKnownLevel){
+      const card = document.getElementById('status-card');
+      card.classList.remove('level-up-flash');
+      void card.offsetWidth;
+      card.classList.add('level-up-flash');
+      showToast(`LEVEL UP! Agora você é nível ${level}`);
+    }
+    lastKnownLevel = level;
+  }
+
+  // ---------- QUESTS ----------
+  function renderQuests(qsnap){
+    const list = document.getElementById('quest-list');
+    list.innerHTML = '';
+    if(qsnap.empty){
+      list.innerHTML = '<p class="empty-note">Nenhuma quest ainda. Adicione a primeira abaixo.</p>';
+      return;
+    }
+    const today = todayStr();
+    qsnap.forEach((docSnap) => {
+      const q = docSnap.data();
+      const done = q.lastCompletedDate === today;
+
+      const row = document.createElement('div');
+      row.className = 'quest-item' + (done ? ' done' : '');
+
+      const check = document.createElement('button');
+      check.className = 'quest-check' + (done ? ' done' : '');
+      check.textContent = done ? '✓' : '';
+      check.title = done ? 'Concluída hoje' : 'Marcar como concluída';
+      check.addEventListener('click', () => completeQuest(docSnap.id, q.xpValue, done));
+
+      const title = document.createElement('div');
+      title.className = 'quest-title';
+      title.textContent = q.title;
+
+      const xpTag = document.createElement('div');
+      xpTag.className = 'quest-xp';
+      xpTag.textContent = `+${q.xpValue} XP`;
+
+      const del = document.createElement('button');
+      del.className = 'quest-del';
+      del.textContent = '×';
+      del.title = 'Remover quest';
+      del.addEventListener('click', () => deleteQuest(docSnap.id));
+
+      row.append(check, title, xpTag, del);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('add-quest-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!currentUid) return;
+    const form = e.target;
+    const title = form.title.value.trim();
+    const xpValue = parseInt(form.xp.value, 10) || 10;
+    if(!title) return;
+
+    const questsCol = collection(db, 'users', currentUid, 'quests');
+    const newRef = doc(questsCol);
+    await setDoc(newRef, { title, xpValue, lastCompletedDate: null });
+    form.reset();
+    form.xp.value = 10;
+  });
+
+  async function completeQuest(questId, xpValue, alreadyDone){
+    if(!currentUid || alreadyDone) return; // só pode concluir 1x por dia
+    const questRef = doc(db, 'users', currentUid, 'quests', questId);
+    const userRef = doc(db, 'users', currentUid);
+
+    await updateDoc(questRef, { lastCompletedDate: todayStr() });
+
+    const userSnap = await getDoc(userRef);
+    const currentXp = userSnap.data()?.xp || 0;
+    await updateDoc(userRef, { xp: currentXp + xpValue });
+
+    showToast(`+${xpValue} XP`);
+  }
+
+  async function deleteQuest(questId){
+    if(!currentUid) return;
+    const questRef = doc(db, 'users', currentUid, 'quests', questId);
+    await setDoc(questRef, { deleted: true, title: '', xpValue: 0, lastCompletedDate: null });
+    // Observação: Firestore modular não expõe deleteDoc aqui por padrão de import;
+    // se preferir apagar de verdade, importe deleteDoc de firebase-firestore.js e troque a linha acima por:
+    // await deleteDoc(questRef);
+  }
+
+  // ---------- GUILDA (amigos) ----------
+  function renderGuild(gsnap){
+    const list = document.getElementById('guild-list');
+    list.innerHTML = '';
+    if(gsnap.empty){
+      list.innerHTML = '<p class="empty-note">Ninguém na guilda ainda.</p>';
+      return;
+    }
+    let rank = 0;
+    gsnap.forEach((docSnap) => {
+      rank++;
+      const u = docSnap.data();
+      const xp = u.xp || 0;
+      const level = levelFromXp(xp);
+      const pct = (xp % XP_PER_LEVEL);
+      const isMe = docSnap.id === currentUid;
+
+      const row = document.createElement('div');
+      row.className = 'guild-row' + (isMe ? ' me' : '');
+
+      row.innerHTML = `
+        <div class="rank-num">${rank}</div>
+        <img src="${u.photoURL || ''}" alt="">
+        <div class="guild-info">
+          <div class="gname">${u.name || 'Aventureiro'}${isMe ? '<span class="you-tag">VOCÊ</span>' : ''}</div>
+          <div class="mini-bar-outer"><div class="mini-bar-inner" style="width:${pct}%"></div></div>
+        </div>
+        <div class="guild-level mono">Nv.${level}</div>
+      `;
+      list.appendChild(row);
+    });
+  }
+</script>
+
+</body>
+</html>
