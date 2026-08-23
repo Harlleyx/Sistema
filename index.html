@@ -300,6 +300,60 @@
     background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; padding:4px;
   }
   .icon-btn:hover{ color:var(--cyan); }
+
+  /* ---------- Streak ---------- */
+  .streak-chip{
+    display:none; align-items:center; justify-content:center; gap:6px;
+    margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:12px;
+    color: var(--gold); background: rgba(232,179,61,0.10); border:1px solid var(--border);
+    padding:5px 10px; border-radius:20px;
+  }
+  .streak-chip.show{ display:inline-flex; }
+
+  /* ---------- Conquistas ---------- */
+  .achievements-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px;
+    margin-top:4px;
+  }
+  .ach-card{
+    background: var(--panel-2); border:1px solid var(--border); border-radius:9px;
+    padding:14px 12px; text-align:center; position:relative; transition: border-color .15s;
+  }
+  .ach-card.unlocked{ border-color: var(--gold); box-shadow: 0 0 0 1px rgba(232,179,61,0.15); }
+  .ach-card.locked{ opacity:0.55; }
+  .ach-icon{ font-size:26px; line-height:1; margin-bottom:8px; }
+  .ach-title{ font-size:12px; font-weight:700; letter-spacing:0.5px; }
+  .ach-desc{ font-size:11px; color:var(--text-dim); margin-top:4px; line-height:1.4; }
+  .ach-mystery .ach-title, .ach-mystery .ach-desc{ color: var(--text-dim); }
+
+  /* ---------- Admin ---------- */
+  .admin-link{ display:none; }
+  .admin-link.show{ display:inline-block; }
+  #admin-view{ flex:1; width:100%; max-width:760px; margin:0 auto; padding: 28px 20px 60px; }
+  .admin-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .admin-header h1{ font-family:'JetBrains Mono',monospace; font-size:16px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
+  .admin-form{ display:flex; flex-direction:column; gap:14px; margin-bottom:26px; }
+  .admin-form .row{ display:flex; gap:12px; }
+  .admin-form .row .field{ flex:1; margin-bottom:0; }
+  .admin-form select{
+    width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:10px 12px; font-size:13px; font-family:'Inter',sans-serif;
+  }
+  .admin-form .checkbox-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); }
+  .admin-form .checkbox-row input{ width:auto; }
+  .admin-form button.btn-save{ align-self:flex-start; padding:10px 20px; border-radius:7px; border:none; background:var(--gold); color:#1a1204; font-weight:700; cursor:pointer; }
+  .admin-form button.btn-save:hover{ background:#f2c159; }
+  .admin-list{ display:flex; flex-direction:column; gap:10px; }
+  .admin-item{
+    display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
+    border-radius:8px; padding:12px 14px;
+  }
+  .admin-item .aicon{ font-size:20px; }
+  .admin-item .ainfo{ flex:1; min-width:0; }
+  .admin-item .ainfo .atitle{ font-size:13px; font-weight:700; }
+  .admin-item .ainfo .ameta{ font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'JetBrains Mono',monospace; }
+  .admin-item .adel{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; }
+  .admin-item .adel:hover{ color:var(--danger); }
 </style>
 </head>
 <body>
@@ -326,6 +380,7 @@
       <div class="user-chip">
         <img id="topbar-avatar" src="" alt="" referrerpolicy="no-referrer">
         <span class="name" id="topbar-name"></span>
+        <button class="ghost admin-link" id="admin-link-btn" type="button">⚙ Admin</button>
         <button class="ghost" id="logout-btn">Sair</button>
       </div>
     </header>
@@ -346,6 +401,7 @@
               <div class="level-label">Nível</div>
               <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar"></div></div>
               <div class="xp-text" id="xp-text">0 / 100 XP</div>
+              <div class="streak-chip" id="streak-chip">🔥 <span id="streak-num">0</span> dias</div>
             </div>
             <button class="ghost accent personalize-btn" id="open-personalize-btn" type="button">✎ Personalizar perfil</button>
           </div>
@@ -367,7 +423,60 @@
           <div id="guild-list"></div>
         </div>
       </div>
+
+      <div class="panel" style="margin-top:22px;">
+        <h2>Conquistas</h2>
+        <div class="achievements-grid" id="achievements-grid"></div>
+      </div>
     </main>
+  </div>
+
+  <!-- ADMIN VIEW (só visível para o e-mail definido em ADMIN_EMAIL) -->
+  <div id="admin-view" class="hidden">
+    <div class="admin-header">
+      <h1>Admin · Conquistas</h1>
+      <button class="ghost" id="admin-back-btn" type="button">← Voltar ao dashboard</button>
+    </div>
+
+    <form class="admin-form" id="admin-achievement-form">
+      <div class="row">
+        <div class="field">
+          <label for="ach-icon">Ícone (emoji)</label>
+          <input type="text" id="ach-icon" maxlength="4" placeholder="🏆" required>
+        </div>
+        <div class="field" style="flex:3;">
+          <label for="ach-title">Título</label>
+          <input type="text" id="ach-title" maxlength="40" placeholder="Ex: Primeiro Passo" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ach-desc">Descrição</label>
+        <input type="text" id="ach-desc" maxlength="120" placeholder="Ex: Complete sua primeira atividade" required>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="ach-type">Condição</label>
+          <select id="ach-type">
+            <option value="total_completions">Total de atividades concluídas</option>
+            <option value="total_xp">XP total acumulado</option>
+            <option value="streak">Sequência de dias (streak)</option>
+            <option value="level">Nível alcançado</option>
+            <option value="perfect_day">Completar todas as quests do dia</option>
+          </select>
+        </div>
+        <div class="field" id="ach-threshold-field">
+          <label for="ach-threshold">Meta (número)</label>
+          <input type="number" id="ach-threshold" min="1" value="1">
+        </div>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="ach-hidden">
+        Deixar oculta (aparece como "???" até ser desbloqueada)
+      </label>
+      <button type="submit" class="btn-save">+ Adicionar conquista</button>
+    </form>
+
+    <div class="admin-list" id="admin-achievements-list"></div>
   </div>
 
   <!-- PROFILE EDIT MODAL -->
@@ -451,11 +560,21 @@ const firebaseConfig = {
   const DEFAULT_GOLD_DIM = '#A67F2C';
   const DEFAULT_BORDER = '#1f2a38';
 
+  // ======= TROQUE pelo e-mail da SUA conta Google =======
+  // Só quem estiver logado com este e-mail vê o botão "Admin" e consegue
+  // acessar a rota #admin para criar/editar conquistas.
+  const ADMIN_EMAIL = 'SEU_EMAIL_AQUI@gmail.com';
+  // =======================================================
+
   let currentUid = null;
+  let isAdmin = false;
   let questsUnsub = null;
   let guildUnsub = null;
+  let achievementsUnsub = null;
   let lastKnownLevel = 1;
   let myProfile = {};       // último snapshot dos dados do próprio usuário
+  let achievementDefs = []; // último snapshot da coleção global "achievements"
+  let currentQuestsSnapshot = null; // último snapshot das quests, usado para checar "dia perfeito"
 
   // avatar padrão (SVG embutido) usado quando um link de foto falha ao carregar
   window.__FALLBACK_AVATAR = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
@@ -771,17 +890,22 @@ const firebaseConfig = {
   onAuthStateChanged(auth, async (user) => {
     if(questsUnsub){ questsUnsub(); questsUnsub = null; }
     if(guildUnsub){ guildUnsub(); guildUnsub = null; }
+    if(achievementsUnsub){ achievementsUnsub(); achievementsUnsub = null; }
 
     if(!user){
       currentUid = null;
+      isAdmin = false;
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('admin-view').classList.add('hidden');
+      document.getElementById('admin-link-btn').classList.remove('show');
       return;
     }
 
     currentUid = user.uid;
+    isAdmin = !!user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    document.getElementById('admin-link-btn').classList.toggle('show', isAdmin);
     document.getElementById('login-view').classList.add('hidden');
-    document.getElementById('dashboard-view').classList.remove('hidden');
 
     document.getElementById('topbar-avatar').src = user.photoURL || '';
     document.getElementById('topbar-name').textContent = user.displayName || 'Aventureiro';
@@ -797,6 +921,10 @@ const firebaseConfig = {
         musicUrl: '',
         musicVideoId: '',
         xp: 0,
+        streak: 0,
+        lastActivityDate: null,
+        totalCompletions: 0,
+        unlockedAchievements: [],
         createdAt: serverTimestamp()
       });
     } else {
@@ -813,6 +941,8 @@ const firebaseConfig = {
       if(!data) return;
       myProfile = data;
       renderStatus(data);
+      renderAchievements();
+      checkAchievements(data);
       if(personalizeModal.classList.contains('hidden')){
         originalTheme = data.themeColor || DEFAULT_GOLD;
         applyTheme(originalTheme);
@@ -822,7 +952,9 @@ const firebaseConfig = {
     // listener das quests do usuário
     const questsCol = collection(db, 'users', user.uid, 'quests');
     questsUnsub = onSnapshot(questsCol, (qsnap) => {
+      currentQuestsSnapshot = qsnap;
       renderQuests(qsnap);
+      checkAchievements(myProfile);
     });
 
     // listener da guilda (todos os usuários, ordenados por xp)
@@ -830,7 +962,36 @@ const firebaseConfig = {
     guildUnsub = onSnapshot(guildQuery, (gsnap) => {
       renderGuild(gsnap);
     });
+
+    // listener global de conquistas (definidas pelo admin)
+    const achievementsColRef = collection(db, 'achievements');
+    achievementsUnsub = onSnapshot(achievementsColRef, (asnap) => {
+      achievementDefs = [];
+      asnap.forEach((d) => achievementDefs.push({ id: d.id, ...d.data() }));
+      achievementDefs.sort((a, b) => (a.order || 0) - (b.order || 0));
+      renderAchievements();
+      renderAdminList();
+      checkAchievements(myProfile);
+    });
+
+    renderRoute();
   });
+
+  // ---------- ROTEAMENTO (dashboard vs admin) ----------
+  function renderRoute(){
+    const wantsAdmin = window.location.hash === '#admin';
+    if(wantsAdmin && isAdmin){
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('admin-view').classList.remove('hidden');
+    } else {
+      if(wantsAdmin && !isAdmin){ window.location.hash = ''; }
+      document.getElementById('admin-view').classList.add('hidden');
+      if(currentUid){ document.getElementById('dashboard-view').classList.remove('hidden'); }
+    }
+  }
+  window.addEventListener('hashchange', renderRoute);
+  document.getElementById('admin-link-btn').addEventListener('click', () => { window.location.hash = '#admin'; });
+  document.getElementById('admin-back-btn').addEventListener('click', () => { window.location.hash = ''; });
 
   // ---------- STATUS / XP / PERFIL ----------
   function renderStatus(data){
@@ -846,6 +1007,11 @@ const firebaseConfig = {
     document.getElementById('avatar-ring').style.setProperty('--pct', pct + '%');
     document.getElementById('status-avatar').src = avatarSrc;
     document.getElementById('status-name-text').textContent = data.name || 'Aventureiro';
+
+    const streak = data.streak || 0;
+    const streakChip = document.getElementById('streak-chip');
+    document.getElementById('streak-num').textContent = streak;
+    streakChip.classList.toggle('show', streak > 0);
 
     safeSetBackground(document.getElementById('status-banner'), data.bannerURL);
 
@@ -1003,16 +1169,41 @@ const firebaseConfig = {
     form.xp.value = 10;
   });
 
+  function yesterdayStr(){
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0,10);
+  }
+
   async function completeQuest(questId, xpValue, alreadyDone){
     if(!currentUid || alreadyDone) return; // só pode concluir 1x por dia
     const questRef = doc(db, 'users', currentUid, 'quests', questId);
     const userRef = doc(db, 'users', currentUid);
+    const today = todayStr();
 
-    await updateDoc(questRef, { lastCompletedDate: todayStr() });
+    await updateDoc(questRef, { lastCompletedDate: today });
 
     const userSnap = await getDoc(userRef);
-    const currentXp = userSnap.data()?.xp || 0;
-    await updateDoc(userRef, { xp: currentXp + xpValue });
+    const u = userSnap.data() || {};
+    const currentXp = u.xp || 0;
+    const totalCompletions = (u.totalCompletions || 0) + 1;
+
+    // streak: já ativo hoje não muda; ativo ontem soma 1; senão reinicia em 1
+    let streak = u.streak || 0;
+    if(u.lastActivityDate === today){
+      // já contava hoje, mantém
+    } else if(u.lastActivityDate === yesterdayStr()){
+      streak = streak + 1;
+    } else {
+      streak = 1;
+    }
+
+    await updateDoc(userRef, {
+      xp: currentXp + xpValue,
+      totalCompletions,
+      streak,
+      lastActivityDate: today
+    });
 
     showToast(`+${xpValue} XP`);
   }
@@ -1081,6 +1272,147 @@ const firebaseConfig = {
 
     list.appendChild(wrap);
     updateNoteButtons();
+  }
+
+  // ---------- CONQUISTAS ----------
+  const ACH_TYPE_LABELS = {
+    total_completions: 'atividades concluídas',
+    total_xp: 'XP total',
+    streak: 'dias de sequência',
+    level: 'nível',
+    perfect_day: 'todas as quests em um dia'
+  };
+
+  function isPerfectDayToday(){
+    if(!currentQuestsSnapshot || currentQuestsSnapshot.empty) return false;
+    const today = todayStr();
+    let allDone = true;
+    currentQuestsSnapshot.forEach((d) => {
+      const q = d.data();
+      if(q.lastCompletedDate !== today) allDone = false;
+    });
+    return allDone;
+  }
+
+  function achievementMet(def, data){
+    const level = levelFromXp(data.xp || 0);
+    switch(def.type){
+      case 'total_xp': return (data.xp || 0) >= (def.threshold || 1);
+      case 'streak': return (data.streak || 0) >= (def.threshold || 1);
+      case 'total_completions': return (data.totalCompletions || 0) >= (def.threshold || 1);
+      case 'level': return level >= (def.threshold || 1);
+      case 'perfect_day': return isPerfectDayToday();
+      default: return false;
+    }
+  }
+
+  let _checkingAchievements = false;
+  async function checkAchievements(data){
+    if(!currentUid || !data || !achievementDefs.length || _checkingAchievements) return;
+    const unlocked = new Set(data.unlockedAchievements || []);
+    const newlyUnlocked = [];
+    achievementDefs.forEach((def) => {
+      if(!unlocked.has(def.id) && achievementMet(def, data)){
+        unlocked.add(def.id);
+        newlyUnlocked.push(def);
+      }
+    });
+    if(newlyUnlocked.length){
+      _checkingAchievements = true;
+      try{
+        await updateDoc(doc(db, 'users', currentUid), { unlockedAchievements: Array.from(unlocked) });
+        newlyUnlocked.forEach((def) => showToast(`🏆 Conquista desbloqueada: ${def.title}`));
+      } finally {
+        _checkingAchievements = false;
+      }
+    }
+  }
+
+  function renderAchievements(){
+    const grid = document.getElementById('achievements-grid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    if(!achievementDefs.length){
+      grid.innerHTML = '<p class="empty-note">Nenhuma conquista cadastrada ainda.</p>';
+      return;
+    }
+    const unlocked = new Set(myProfile.unlockedAchievements || []);
+    achievementDefs.forEach((def) => {
+      const isUnlocked = unlocked.has(def.id);
+      const isMystery = def.hidden && !isUnlocked;
+      const card = document.createElement('div');
+      card.className = 'ach-card ' + (isUnlocked ? 'unlocked' : 'locked') + (isMystery ? ' ach-mystery' : '');
+      card.innerHTML = `
+        <div class="ach-icon">${isMystery ? '❔' : (def.icon || '🏆')}</div>
+        <div class="ach-title">${isMystery ? '???' : def.title}</div>
+        <div class="ach-desc">${isMystery ? 'Conquista secreta' : (def.description || '')}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ---------- ADMIN: CRUD de conquistas ----------
+  const achTypeSelect = document.getElementById('ach-type');
+  const achThresholdField = document.getElementById('ach-threshold-field');
+  function syncThresholdVisibility(){
+    achThresholdField.style.display = achTypeSelect.value === 'perfect_day' ? 'none' : '';
+  }
+  achTypeSelect.addEventListener('change', syncThresholdVisibility);
+  syncThresholdVisibility();
+
+  document.getElementById('admin-achievement-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!isAdmin) return;
+    const icon = document.getElementById('ach-icon').value.trim() || '🏆';
+    const title = document.getElementById('ach-title').value.trim();
+    const description = document.getElementById('ach-desc').value.trim();
+    const type = achTypeSelect.value;
+    const threshold = type === 'perfect_day' ? 1 : (parseInt(document.getElementById('ach-threshold').value, 10) || 1);
+    const hidden = document.getElementById('ach-hidden').checked;
+    if(!title || !description) return;
+
+    const achievementsColRef = collection(db, 'achievements');
+    const newRef = doc(achievementsColRef);
+    await setDoc(newRef, { icon, title, description, type, threshold, hidden, order: Date.now() });
+
+    e.target.reset();
+    document.getElementById('ach-threshold').value = 1;
+    syncThresholdVisibility();
+    showToast('Conquista criada');
+  });
+
+  function renderAdminList(){
+    const list = document.getElementById('admin-achievements-list');
+    if(!list) return;
+    list.innerHTML = '';
+    if(!achievementDefs.length){
+      list.innerHTML = '<p class="empty-note">Nenhuma conquista cadastrada ainda.</p>';
+      return;
+    }
+    achievementDefs.forEach((def) => {
+      const row = document.createElement('div');
+      row.className = 'admin-item';
+      const metaLabel = def.type === 'perfect_day'
+        ? ACH_TYPE_LABELS.perfect_day
+        : `${def.threshold} ${ACH_TYPE_LABELS[def.type] || ''}`;
+      row.innerHTML = `
+        <div class="aicon">${def.icon || '🏆'}</div>
+        <div class="ainfo">
+          <div class="atitle">${def.title}${def.hidden ? ' 🔒' : ''}</div>
+          <div class="ameta">${metaLabel}</div>
+        </div>
+        <button class="adel" title="Remover conquista">×</button>
+      `;
+      row.querySelector('.adel').addEventListener('click', async () => {
+        try{
+          await deleteDoc(doc(db, 'achievements', def.id));
+        }catch(err){
+          console.error(err);
+          showToast('Não foi possível remover a conquista');
+        }
+      });
+      list.appendChild(row);
+    });
   }
 </script>
 
