@@ -210,7 +210,7 @@
   .guild-info .gname{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
   .guild-info .gname .you-tag{ color:var(--gold); font-size:10px; font-family:'JetBrains Mono',monospace; margin-left:2px; }
   .mini-bar-outer{ height:5px; border-radius:3px; background:var(--panel-2); margin-top:5px; overflow:hidden; }
-  .mini-bar-inner{ height:100%; background:var(--cyan); }
+  .mini-bar-inner{ height:100%; background:var(--gold); }
   .guild-level{ font-family:'JetBrains Mono',monospace; font-weight:800; color:var(--text-dim); font-size:13px; text-align:right; min-width:44px; }
   .rank-num{ font-family:'JetBrains Mono',monospace; color:var(--text-dim); font-size:12px; width:16px; text-align:center; }
   .guild-rows-wrap{ display:flex; flex-direction:column; }
@@ -339,7 +339,7 @@
             <div class="avatar-ring" id="avatar-ring"><img id="status-avatar" src="" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''"></div>
             <div class="name" id="status-name">
               <span id="status-name-text"></span>
-              <button class="note-btn hidden" id="my-note-btn" title="Tocando agora">♪</button>
+              <button class="note-btn hidden" id="my-note-btn" type="button" title="Tocando agora">♪</button>
             </div>
             <div class="level-block">
               <div class="level-num mono" id="level-num">1</div>
@@ -347,7 +347,7 @@
               <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar"></div></div>
               <div class="xp-text" id="xp-text">0 / 100 XP</div>
             </div>
-            <button class="ghost accent personalize-btn" id="open-personalize-btn">✎ Personalizar perfil</button>
+            <button class="ghost accent personalize-btn" id="open-personalize-btn" type="button">✎ Personalizar perfil</button>
           </div>
 
           <div class="panel">
@@ -373,7 +373,7 @@
   <!-- PROFILE EDIT MODAL -->
   <div id="personalize-modal" class="modal-overlay hidden">
     <div class="modal-box">
-      <button class="modal-close" id="close-personalize-btn">×</button>
+      <button class="modal-close" id="close-personalize-btn" type="button">×</button>
       <h3>Personalizar Perfil</h3>
       <p class="modal-sub">Banner e foto precisam do link direto do arquivo de imagem/GIF (terminando em .jpg, .png ou .gif) — não o link de uma página. Do Pinterest, por exemplo: abra a imagem em tamanho grande e use "Copiar endereço da imagem", não o link do pin.</p>
       <div class="modal-preview-banner" id="modal-banner-preview"></div>
@@ -405,7 +405,7 @@
               <button type="button" class="icon-btn" id="copy-hex-btn" title="Copiar código">⧉</button>
             </div>
           </div>
-          <div class="hint">Muda a cor de destaque do site (nível, barra de XP, botões) só na sua visão.</div>
+          <div class="hint">Muda a cor de destaque do site (nível, barra de XP, botões, bordas) só na sua visão.</div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancel-personalize-btn">Cancelar</button>
@@ -425,7 +425,7 @@
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
+    getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot,
     query, orderBy, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -449,6 +449,7 @@ const firebaseConfig = {
   const XP_PER_LEVEL = 100; // XP necessário para cada nível (fixo e simples)
   const DEFAULT_GOLD = '#E8B33D';
   const DEFAULT_GOLD_DIM = '#A67F2C';
+  const DEFAULT_BORDER = '#1f2a38';
 
   let currentUid = null;
   let questsUnsub = null;
@@ -501,7 +502,10 @@ const firebaseConfig = {
 
   // ---------- MÚSICA (áudio, sem vídeo visível) ----------
   // Um único player fica escondido na página; clicar na nota ♪ toca/pausa.
-  // Usa a API oficial do YouTube (mais confiável que postMessage cru).
+  // O estado de play/pause é controlado por uma flag própria (currentTrack.playing)
+  // em vez de perguntar ao player do YouTube, porque logo após criar o player
+  // (ou durante o buffer inicial) ytPlayer.getPlayerState() pode não refletir o
+  // estado real ainda — isso fazia o clique de "pausar" às vezes reiniciar a música.
   let ytPlayer = null;
   let ytApiReady = false;
   let pendingTrack = null; // guarda { uid, videoId } se o clique aconteceu antes da API carregar
@@ -549,12 +553,19 @@ const firebaseConfig = {
 
   function toggleMusic(uid, videoId){
     if(!videoId) return;
-    if(currentTrack.uid === uid && currentTrack.videoId === videoId && ytPlayer && ytPlayer.getPlayerState){
-      // mesma música: alterna tocar/pausar
-      const state = ytPlayer.getPlayerState();
-      if(state === 1){ ytPlayer.pauseVideo(); currentTrack.playing = false; }
-      else { ytPlayer.playVideo(); currentTrack.playing = true; }
-      updateNoteButtons();
+    if(currentTrack.uid === uid && currentTrack.videoId === videoId && ytPlayer){
+      // mesma música: alterna tocar/pausar usando nosso próprio estado
+      // (mais confiável do que ytPlayer.getPlayerState(), que pode estar
+      // desatualizado logo após o início da reprodução)
+      if(currentTrack.playing){
+        currentTrack.playing = false;
+        updateNoteButtons();
+        try{ ytPlayer.pauseVideo(); }catch(err){ /* player ainda carregando */ }
+      } else {
+        currentTrack.playing = true;
+        updateNoteButtons();
+        try{ ytPlayer.playVideo(); }catch(err){ /* player ainda carregando */ }
+      }
       return;
     }
     // trocando de música (ou primeiro clique)
@@ -635,10 +646,25 @@ const firebaseConfig = {
     return rgbToHex(nr, ng, nb);
   }
 
+  // Gera uma cor de borda tingida com o tom do hex escolhido, mas ainda
+  // escura o suficiente para não competir com o texto (mistura com o
+  // cinza-azulado padrão das bordas).
+  function borderTintFromHex(hex){
+    const rgb = hexToRgb(hex);
+    const base = hexToRgb(DEFAULT_BORDER);
+    if(!rgb || !base) return DEFAULT_BORDER;
+    const mix = 0.45; // 45% da cor do tema, 55% do cinza padrão
+    const nr = Math.round(rgb.r * mix + base.r * (1 - mix));
+    const ng = Math.round(rgb.g * mix + base.g * (1 - mix));
+    const nb = Math.round(rgb.b * mix + base.b * (1 - mix));
+    return rgbToHex(nr, ng, nb);
+  }
+
   function applyTheme(hex){
     const h = hex && hexToRgb(hex) ? hex : DEFAULT_GOLD;
     document.documentElement.style.setProperty('--gold', h);
     document.documentElement.style.setProperty('--gold-dim', darkenHex(h, 0.32));
+    document.documentElement.style.setProperty('--border', borderTintFromHex(h));
   }
 
   let pickerH = 42, pickerS = 0.78, pickerV = 0.91, pickerHex = DEFAULT_GOLD;
@@ -923,14 +949,17 @@ const firebaseConfig = {
       return;
     }
     const today = todayStr();
+    let rendered = 0;
     qsnap.forEach((docSnap) => {
       const q = docSnap.data();
       const done = q.lastCompletedDate === today;
+      rendered++;
 
       const row = document.createElement('div');
       row.className = 'quest-item' + (done ? ' done' : '');
 
       const check = document.createElement('button');
+      check.type = 'button';
       check.className = 'quest-check' + (done ? ' done' : '');
       check.textContent = done ? '✓' : '';
       check.title = done ? 'Concluída hoje' : 'Marcar como concluída';
@@ -945,6 +974,7 @@ const firebaseConfig = {
       xpTag.textContent = `+${q.xpValue} XP`;
 
       const del = document.createElement('button');
+      del.type = 'button';
       del.className = 'quest-del';
       del.textContent = '×';
       del.title = 'Remover quest';
@@ -953,6 +983,9 @@ const firebaseConfig = {
       row.append(check, title, xpTag, del);
       list.appendChild(row);
     });
+    if(rendered === 0){
+      list.innerHTML = '<p class="empty-note">Nenhuma quest ainda. Adicione a primeira abaixo.</p>';
+    }
   }
 
   document.getElementById('add-quest-form').addEventListener('submit', async (e) => {
@@ -987,10 +1020,12 @@ const firebaseConfig = {
   async function deleteQuest(questId){
     if(!currentUid) return;
     const questRef = doc(db, 'users', currentUid, 'quests', questId);
-    await setDoc(questRef, { deleted: true, title: '', xpValue: 0, lastCompletedDate: null });
-    // Observação: Firestore modular não expõe deleteDoc aqui por padrão de import;
-    // se preferir apagar de verdade, importe deleteDoc de firebase-firestore.js e troque a linha acima por:
-    // await deleteDoc(questRef);
+    try{
+      await deleteDoc(questRef);
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível remover a quest');
+    }
   }
 
   // ---------- GUILDA (amigos) ----------
@@ -1022,7 +1057,7 @@ const firebaseConfig = {
       }
 
       const noteHtml = u.musicVideoId
-        ? `<button class="note-btn" data-uid="${uid}" data-video="${u.musicVideoId}" title="Tocar/pausar música">♪</button>`
+        ? `<button class="note-btn" type="button" data-uid="${uid}" data-video="${u.musicVideoId}" title="Tocar/pausar música">♪</button>`
         : '';
 
       row.innerHTML = `
