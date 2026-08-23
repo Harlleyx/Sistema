@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
 <title>SISTEMA — Evolução Real</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -157,12 +158,11 @@
     flex-shrink:0; transition: all .15s;
   }
   .note-btn:hover{ border-color:var(--gold); color:var(--gold); }
-  .note-btn.active{ background: rgba(232,179,61,0.15); border-color:var(--gold); color:var(--gold); }
-  .music-embed{
-    margin-top:10px; border-radius:8px; overflow:hidden; border:1px solid var(--border); background:#000;
+  .note-btn.active{ background: rgba(232,179,61,0.15); border-color:var(--gold); color:var(--gold); animation: pulse-note 1.6s ease-in-out infinite; }
+  @keyframes pulse-note{
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(232,179,61,0.45); }
+    50%{ box-shadow: 0 0 0 5px rgba(232,179,61,0); }
   }
-  .music-embed iframe{ width:100%; aspect-ratio:16/9; display:block; border:0; }
-  .music-embed-row{ grid-column: 1 / -1; margin:6px 4px 10px; }
 
   /* quest log */
   .quest-item{
@@ -285,7 +285,7 @@
     <header class="topbar">
       <div class="brand"><span class="dot"></span><span>SISTEMA</span></div>
       <div class="user-chip">
-        <img id="topbar-avatar" src="" alt="">
+        <img id="topbar-avatar" src="" alt="" referrerpolicy="no-referrer">
         <span class="name" id="topbar-name"></span>
         <button class="ghost" id="logout-btn">Sair</button>
       </div>
@@ -297,7 +297,7 @@
         <div style="display:flex; flex-direction:column; gap:22px;">
           <div class="panel status-card" id="status-card">
             <div class="status-banner" id="status-banner"></div>
-            <div class="avatar-ring" id="avatar-ring"><img id="status-avatar" src="" alt=""></div>
+            <div class="avatar-ring" id="avatar-ring"><img id="status-avatar" src="" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''"></div>
             <div class="name" id="status-name">
               <span id="status-name-text"></span>
               <button class="note-btn hidden" id="my-note-btn" title="Tocando agora">♪</button>
@@ -308,7 +308,6 @@
               <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar"></div></div>
               <div class="xp-text" id="xp-text">0 / 100 XP</div>
             </div>
-            <div id="my-music-embed"></div>
             <button class="ghost accent personalize-btn" id="open-personalize-btn">✎ Personalizar perfil</button>
           </div>
 
@@ -337,23 +336,23 @@
     <div class="modal-box">
       <button class="modal-close" id="close-personalize-btn">×</button>
       <h3>Personalizar Perfil</h3>
-      <p class="modal-sub">Banner e foto aceitam links de imagem ou GIF. A música toca a partir de um link do YouTube — sua guilda pode ver e ouvir.</p>
+      <p class="modal-sub">Banner e foto precisam do link direto do arquivo de imagem/GIF (terminando em .jpg, .png ou .gif) — não o link de uma página. Do Pinterest, por exemplo: abra a imagem em tamanho grande e use "Copiar endereço da imagem", não o link do pin.</p>
       <div class="modal-preview-banner" id="modal-banner-preview"></div>
       <form id="personalize-form">
         <div class="field">
-          <label for="input-banner">Banner (imagem ou GIF)</label>
-          <input type="url" id="input-banner" name="bannerURL" placeholder="https://exemplo.com/banner.gif">
-          <div class="hint">Deixe em branco para usar o fundo padrão.</div>
+          <label for="input-banner">Banner (link direto da imagem ou GIF)</label>
+          <input type="url" id="input-banner" name="bannerURL" placeholder="https://i.pinimg.com/.../banner.gif">
+          <div class="hint">Deixe em branco para usar o fundo padrão. Se o link não carregar, o app avisa e ignora o banner.</div>
         </div>
         <div class="field">
-          <label for="input-avatar">Foto de perfil (imagem ou GIF)</label>
-          <input type="url" id="input-avatar" name="photoOverride" placeholder="https://exemplo.com/avatar.gif">
+          <label for="input-avatar">Foto de perfil (link direto da imagem ou GIF)</label>
+          <input type="url" id="input-avatar" name="photoOverride" placeholder="https://i.pinimg.com/.../avatar.gif">
           <div class="hint">Deixe em branco para usar sua foto do Google.</div>
         </div>
         <div class="field">
           <label for="input-music">Música (link do YouTube)</label>
           <input type="url" id="input-music" name="musicUrl" placeholder="https://youtube.com/watch?v=...">
-          <div class="hint">Aparece como uma nota ♪ que sua guilda pode clicar para ver e ouvir.</div>
+          <div class="hint">Aparece como uma nota ♪ ao lado do seu nome. Ao clicar, toca só o áudio; clicando de novo, pausa. Não mostra vídeo.</div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancel-personalize-btn">Cancelar</button>
@@ -400,8 +399,11 @@ const firebaseConfig = {
   let guildUnsub = null;
   let lastKnownLevel = 1;
   let myProfile = {};       // último snapshot dos dados do próprio usuário
-  let myMusicOpen = false;
-  const openGuildMusic = new Set(); // uids com o player de música aberto na guilda
+
+  // avatar padrão (SVG embutido) usado quando um link de foto falha ao carregar
+  window.__FALLBACK_AVATAR = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88"><rect width="88" height="88" fill="#141c28"/><circle cx="44" cy="33" r="15" fill="#2a3646"/><rect x="16" y="55" width="56" height="26" rx="13" fill="#2a3646"/></svg>'
+  );
 
   function todayStr(){
     return new Date().toISOString().slice(0,10); // YYYY-MM-DD
@@ -425,8 +427,63 @@ const firebaseConfig = {
     return match ? match[1] : null;
   }
 
-  function youtubeEmbedHtml(videoId){
-    return `<div class="music-embed"><iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" title="Música" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`;
+  // Aplica um background-image só depois de confirmar que a URL carrega de fato
+  // (evita banner quebrado quando o link não é o arquivo direto da imagem)
+  const _bgCache = new Map(); // url -> 'ok' | 'fail'
+  function safeSetBackground(el, url, overlay){
+    const finalImg = overlay ? `${overlay}, url("${url}")` : `url("${url}")`;
+    if(!url){ el.style.backgroundImage = ''; return; }
+    const cached = _bgCache.get(url);
+    if(cached === 'ok'){ el.style.backgroundImage = finalImg; return; }
+    if(cached === 'fail'){ el.style.backgroundImage = ''; return; }
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => { _bgCache.set(url, 'ok'); el.style.backgroundImage = finalImg; };
+    img.onerror = () => { _bgCache.set(url, 'fail'); el.style.backgroundImage = ''; };
+    img.src = url;
+  }
+
+  // ---------- MÚSICA (áudio, sem vídeo visível) ----------
+  // Um único player fica escondido na página; clicar na nota ♪ toca/pausa.
+  let audioIframe = null;
+  let currentTrack = { uid: null, videoId: null, playing: false };
+
+  function sendPlayerCommand(func){
+    if(audioIframe && audioIframe.contentWindow){
+      audioIframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*');
+    }
+  }
+
+  function toggleMusic(uid, videoId){
+    if(!videoId) return;
+    if(currentTrack.uid === uid && currentTrack.videoId === videoId){
+      // mesma música: alterna tocar/pausar
+      if(currentTrack.playing){
+        sendPlayerCommand('pauseVideo');
+        currentTrack.playing = false;
+      } else {
+        sendPlayerCommand('playVideo');
+        currentTrack.playing = true;
+      }
+    } else {
+      // trocando de música: remove o player antigo e cria um novo, tocando
+      if(audioIframe){ audioIframe.remove(); audioIframe = null; }
+      audioIframe = document.createElement('iframe');
+      audioIframe.style.cssText = 'position:fixed;bottom:0;right:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;';
+      audioIframe.allow = 'autoplay';
+      audioIframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&controls=0&playsinline=1&origin=${encodeURIComponent(location.origin)}`;
+      document.body.appendChild(audioIframe);
+      currentTrack = { uid, videoId, playing: true };
+    }
+    updateNoteButtons();
+  }
+
+  function updateNoteButtons(){
+    document.querySelectorAll('.note-btn[data-uid]').forEach((btn) => {
+      const isCurrent = currentTrack.uid === btn.dataset.uid && currentTrack.videoId === btn.dataset.video;
+      btn.classList.toggle('active', isCurrent && currentTrack.playing);
+      btn.textContent = (isCurrent && currentTrack.playing) ? '❚❚' : '♪';
+    });
   }
 
   // ---------- AUTH ----------
@@ -519,19 +576,19 @@ const firebaseConfig = {
     document.getElementById('status-avatar').src = avatarSrc;
     document.getElementById('status-name-text').textContent = data.name || 'Aventureiro';
 
-    const banner = document.getElementById('status-banner');
-    banner.style.backgroundImage = data.bannerURL ? `url("${data.bannerURL}")` : '';
+    safeSetBackground(document.getElementById('status-banner'), data.bannerURL);
 
     const noteBtn = document.getElementById('my-note-btn');
     if(data.musicVideoId){
       noteBtn.classList.remove('hidden');
-      noteBtn.classList.toggle('active', myMusicOpen);
+      noteBtn.dataset.uid = currentUid;
+      noteBtn.dataset.video = data.musicVideoId;
     } else {
       noteBtn.classList.add('hidden');
-      myMusicOpen = false;
+      delete noteBtn.dataset.uid;
+      delete noteBtn.dataset.video;
     }
-    const embedSlot = document.getElementById('my-music-embed');
-    embedSlot.innerHTML = (myMusicOpen && data.musicVideoId) ? youtubeEmbedHtml(data.musicVideoId) : '';
+    updateNoteButtons();
 
     if(level > lastKnownLevel){
       const card = document.getElementById('status-card');
@@ -543,9 +600,8 @@ const firebaseConfig = {
     lastKnownLevel = level;
   }
 
-  document.getElementById('my-note-btn').addEventListener('click', () => {
-    myMusicOpen = !myMusicOpen;
-    renderStatus(myProfile);
+  document.getElementById('my-note-btn').addEventListener('click', (e) => {
+    toggleMusic(e.currentTarget.dataset.uid, e.currentTarget.dataset.video);
   });
 
   // ---------- PERSONALIZAR PERFIL ----------
@@ -568,10 +624,19 @@ const firebaseConfig = {
     if(e.target === personalizeModal) closePersonalizeModal();
   });
 
+  let _bannerPreviewTimer = null;
   function updateModalBannerPreview(){
+    clearTimeout(_bannerPreviewTimer);
     const val = document.getElementById('input-banner').value.trim();
     const preview = document.getElementById('modal-banner-preview');
-    preview.style.backgroundImage = val ? `url("${val}")` : '';
+    if(!val){ preview.style.backgroundImage = ''; return; }
+    _bannerPreviewTimer = setTimeout(() => {
+      const img = new Image();
+      img.referrerPolicy = 'no-referrer';
+      img.onload = () => { preview.style.backgroundImage = `url("${val}")`; };
+      img.onerror = () => { preview.style.backgroundImage = ''; showToast('Não carregou — use o link direto do arquivo de imagem'); };
+      img.src = val;
+    }, 500);
   }
   document.getElementById('input-banner').addEventListener('input', updateModalBannerPreview);
 
@@ -591,7 +656,11 @@ const firebaseConfig = {
 
     const userRef = doc(db, 'users', currentUid);
     await updateDoc(userRef, { bannerURL, customPhotoURL, musicUrl, musicVideoId });
-    myMusicOpen = false;
+    if(currentTrack.uid === currentUid && currentTrack.videoId !== musicVideoId){
+      if(audioIframe){ audioIframe.remove(); audioIframe = null; }
+      currentTrack = { uid: null, videoId: null, playing: false };
+      updateNoteButtons();
+    }
     closePersonalizeModal();
     showToast('Perfil atualizado');
   });
@@ -678,7 +747,6 @@ const firebaseConfig = {
   // ---------- GUILDA (amigos) ----------
   function renderGuild(gsnap){
     const list = document.getElementById('guild-list');
-    list.__lastSnapshot = gsnap;
     list.innerHTML = '';
     if(gsnap.empty){
       list.innerHTML = '<p class="empty-note">Ninguém na guilda ainda.</p>';
@@ -705,12 +773,12 @@ const firebaseConfig = {
       }
 
       const noteHtml = u.musicVideoId
-        ? `<button class="note-btn${openGuildMusic.has(uid) ? ' active' : ''}" data-uid="${uid}" data-video="${u.musicVideoId}" title="Ver e ouvir">♪</button>`
+        ? `<button class="note-btn" data-uid="${uid}" data-video="${u.musicVideoId}" title="Tocar/pausar música">♪</button>`
         : '';
 
       row.innerHTML = `
         <div class="rank-num">${rank}</div>
-        <img src="${avatarSrc}" alt="">
+        <img src="${avatarSrc}" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''">
         <div class="guild-info">
           <div class="gname">${u.name || 'Aventureiro'}${isMe ? '<span class="you-tag">VOCÊ</span>' : ''}</div>
           <div class="mini-bar-outer"><div class="mini-bar-inner" style="width:${pct}%"></div></div>
@@ -718,34 +786,17 @@ const firebaseConfig = {
         ${noteHtml}
         <div class="guild-level mono">Nv.${level}</div>
       `;
+      if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.88), rgba(10,14,20,0.75))'); }
       wrap.appendChild(row);
 
       const noteBtn = row.querySelector('.note-btn');
       if(noteBtn){
-        noteBtn.addEventListener('click', () => toggleGuildMusic(uid, u.musicVideoId));
-      }
-
-      if(openGuildMusic.has(uid) && u.musicVideoId){
-        const embedWrap = document.createElement('div');
-        embedWrap.className = 'music-embed-row';
-        embedWrap.innerHTML = youtubeEmbedHtml(u.musicVideoId);
-        wrap.appendChild(embedWrap);
+        noteBtn.addEventListener('click', () => toggleMusic(uid, u.musicVideoId));
       }
     });
 
     list.appendChild(wrap);
-  }
-
-  function toggleGuildMusic(uid, videoId){
-    if(!videoId) return;
-    if(openGuildMusic.has(uid)){
-      openGuildMusic.delete(uid);
-    } else {
-      openGuildMusic.add(uid);
-    }
-    // re-renderiza a guilda com o estado atual dos players abertos
-    const list = document.getElementById('guild-list');
-    if(list.__lastSnapshot){ renderGuild(list.__lastSnapshot); }
+    updateNoteButtons();
   }
 </script>
 
