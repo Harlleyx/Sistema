@@ -232,6 +232,7 @@
     width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border);
     border-radius:10px; padding:24px; position:relative;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-height: 90vh; overflow-y: auto;
   }
   .modal-box h3{
     font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:2px; text-transform:uppercase;
@@ -333,35 +334,10 @@
   .achievements-grid.compact .ach-desc{ font-size:9.5px; margin-top:3px; }
   .ach-mystery .ach-title, .ach-mystery .ach-desc{ color: var(--text-dim); }
 
-  /* ---------- Coluna direita (guilda/conquistas <-> painel de nota) ---------- */
+  /* ---------- Coluna direita (guilda/conquistas) ---------- */
   #right-column{ display:flex; flex-direction:column; gap:22px; min-height:100%; }
   #side-default{ display:flex; flex-direction:column; gap:22px; }
   #achievements-panel-box{ flex:1; display:flex; flex-direction:column; }
-
-  .note-panel{ display:flex; flex-direction:column; min-height:560px; }
-  .note-panel-head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; }
-  .note-panel-heading{ min-width:0; }
-  .note-panel-track{
-    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase;
-    color:var(--text-dim);
-  }
-  .note-panel-title{ font-size:17px; font-weight:700; margin-top:3px; }
-  .note-panel-textarea{
-    flex:1; width:100%; min-height:400px; resize:vertical;
-    background:var(--panel-2); border:1px solid var(--border); border-radius:8px; color:var(--text);
-    padding:16px; font-size:14px; line-height:1.6; font-family:'Inter',sans-serif;
-  }
-  .note-panel-textarea:focus{ outline:none; border-color:var(--cyan); }
-  .note-panel-actions{ display:flex; justify-content:flex-end; margin-top:14px; }
-  .note-panel-actions .btn-save{
-    background:var(--gold); color:#1a1204; border:none; border-radius:7px; padding:10px 22px;
-    font-weight:700; font-size:13px; cursor:pointer;
-  }
-  .note-panel-actions .btn-save:hover{ background:#f2c159; }
-  @media (max-width: 800px){
-    .note-panel{ min-height:420px; }
-    .note-panel-textarea{ min-height:280px; }
-  }
 
   /* ---------- Admin ---------- */
   .admin-link{ display:none; }
@@ -392,147 +368,21 @@
   .admin-item .adel{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; }
   .admin-item .adel:hover{ color:var(--danger); }
 
-  /* ---------- Área de Conhecimento ---------- */
-  .knowledge-panel{ margin-top:22px; }
-  .knowledge-toolbar{ display:flex; justify-content:flex-end; margin-bottom:14px; margin-top:-42px; }
-  .knowledge-toolbar button{
-    background: var(--gold); color:#1a1204; border:none; border-radius:6px; padding:8px 14px;
-    font-weight:700; font-size:12px; cursor:pointer; font-family:'JetBrains Mono',monospace;
+  /* ---------- Fundo animado ---------- */
+  #animated-bg-layer{
+    position:fixed; inset:0; z-index:-1; overflow:hidden; background:transparent; pointer-events:none;
   }
-  .knowledge-toolbar button:hover{ background:#f2c159; }
-  .track-list{ display:flex; flex-direction:column; gap:14px; }
-  .track-card{
-    border:1px solid var(--border); border-radius:9px; background:var(--panel-2); overflow:hidden;
+  #animated-bg-layer.on::after{
+    content:''; position:absolute; inset:0; background: rgba(10,14,20,0.72);
   }
-  .track-head{
-    display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer;
-    user-select:none;
+  #animated-bg-layer img, #animated-bg-layer video{
+    width:100%; height:100%; object-fit:cover; display:block;
   }
-  .track-head .ticon{ font-size:20px; }
-  .track-head .tinfo{ flex:1; min-width:0; }
-  .track-head .ttitle{ font-size:14px; font-weight:700; }
-  .track-head .tprogress-text{ font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; margin-top:3px; }
-  .track-head .tprogress-bar{ height:5px; border-radius:3px; background:var(--panel); margin-top:6px; overflow:hidden; }
-  .track-head .tprogress-fill{ height:100%; background:var(--gold); transition:width .4s ease; }
-  .track-head .tcaret{ color:var(--text-dim); font-size:12px; transition: transform .2s; flex-shrink:0; }
-  .track-card.open .tcaret{ transform: rotate(90deg); }
-  .track-del{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; flex-shrink:0; }
-  .track-del:hover{ color:var(--danger); }
-  .track-body{ display:none; border-top:1px solid var(--border); padding:6px 16px 14px; }
-  .track-card.open .track-body{ display:block; }
-
-  /* ---------- Caminho estilo Duolingo ---------- */
-  .path-wrap{ position:relative; padding:14px 6px 4px; }
-  .path-line{
-    position:absolute; left:50%; top:30px; bottom:30px; width:4px; transform:translateX(-50%);
-    background-image: repeating-linear-gradient(to bottom, var(--border) 0 10px, transparent 10px 20px);
-    border-radius:2px; z-index:0;
-  }
-  .path-row{ position:relative; z-index:1; display:flex; justify-content:center; padding:10px 0; }
-  .path-node-slot{ display:flex; flex-direction:column; align-items:center; gap:6px; transition: transform .2s; }
-  .path-node{
-    width:56px; height:56px; border-radius:50%; border:none;
-    background:var(--panel-2); display:flex; align-items:center; justify-content:center;
-    font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; cursor:pointer;
-    color:var(--text-dim); box-shadow:0 4px 0 rgba(0,0,0,0.35); transition: transform .1s;
-  }
-  .path-node:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,0.35); }
-  .path-node.done{ background:var(--gold); color:#1a1204; box-shadow:0 4px 0 var(--gold-dim); }
-  .path-node.current{
-    background:var(--panel); color:var(--gold); box-shadow:0 4px 0 var(--gold-dim), 0 0 0 3px rgba(232,179,61,0.35);
-    animation: path-node-pulse 1.8s ease-in-out infinite;
-  }
-  .path-node.locked{ cursor:not-allowed; opacity:0.5; box-shadow:0 4px 0 rgba(0,0,0,0.25); }
-  @keyframes path-node-pulse{
-    0%, 100%{ box-shadow:0 4px 0 var(--gold-dim), 0 0 0 0 rgba(232,179,61,0.4); }
-    50%{ box-shadow:0 4px 0 var(--gold-dim), 0 0 0 8px rgba(232,179,61,0); }
-  }
-  .path-node-title{ font-size:11px; font-weight:700; text-align:center; max-width:120px; color:var(--text-dim); }
-  .path-node-slot:has(.path-node.done) .path-node-title{ color:var(--text); }
-  .path-node-slot:has(.path-node.current) .path-node-title{ color:var(--gold); }
-
-  .path-popup{
-    position:relative; z-index:2; margin:2px auto 16px; max-width:260px;
-    background:var(--panel); border:1px solid var(--gold-dim); border-radius:10px; padding:14px;
-    text-align:center; box-shadow:0 10px 26px rgba(0,0,0,0.45);
-  }
-  .path-popup .pp-close{
-    position:absolute; top:8px; right:10px; background:none; border:none; color:var(--text-dim);
-    cursor:pointer; font-size:15px;
-  }
-  .path-popup .pp-close:hover{ color:var(--danger); }
-  .path-popup .pp-title{ font-size:14px; font-weight:700; padding-right:14px; }
-  .path-popup .pp-xp{ font-family:'JetBrains Mono',monospace; color:var(--gold); font-size:12px; margin-top:4px; }
-  .path-popup .pp-actions{ display:flex; gap:8px; margin-top:12px; }
-  .path-popup .pp-actions button{
-    flex:1; padding:9px; border-radius:7px; font-weight:700; font-size:12px; cursor:pointer;
-    border:1px solid var(--border); background:var(--panel-2); color:var(--text);
-  }
-  .path-popup .pp-complete{ background:var(--gold); color:#1a1204; border:none; }
-  .path-popup .pp-complete:hover{ background:#f2c159; }
-  .path-popup .pp-note:hover{ border-color:var(--cyan); color:var(--cyan); }
-  .path-popup .pp-del{
-    display:block; width:100%; margin-top:10px; background:none; border:none; color:var(--text-dim);
-    font-size:11px; cursor:pointer; text-decoration:underline;
-  }
-  .path-popup .pp-del:hover{ color:var(--danger); }
-
-  .topic-item{ border-bottom:1px solid var(--border); padding:10px 0; }
-  .topic-item:last-child{ border-bottom:none; }
-  .topic-row{ display:flex; align-items:center; gap:10px; }
-  .topic-title{ flex:1; font-size:13px; cursor:pointer; }
-  .topic-item.done .topic-title{ color:var(--text-dim); text-decoration:line-through; }
-  .topic-xp{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); }
-  .topic-note-toggle{
-    background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:13px; padding:0 3px;
-  }
-  .topic-note-toggle:hover{ color:var(--cyan); }
-  .topic-note-toggle.has-note{ color:var(--cyan); }
-  .topic-del{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; padding:0 3px; }
-  .topic-del:hover{ color:var(--danger); }
-  .topic-note-box{ display:none; margin:8px 0 0 32px; }
-  .topic-note-box.open{ display:flex; gap:8px; align-items:flex-start; }
-  .topic-note-box textarea{
-    flex:1; min-height:56px; background:var(--panel); border:1px solid var(--border); border-radius:6px;
-    color:var(--text); padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif; resize:vertical;
-  }
-  .topic-note-box textarea:focus{ outline:none; border-color:var(--cyan); }
-  .topic-note-save{
-    background:var(--gold); color:#1a1204; border:none; border-radius:6px; padding:8px 10px;
-    font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0;
-  }
-  .topic-note-save:hover{ background:#f2c159; }
-
-  .add-topic-form{ display:flex; gap:8px; margin-top:10px; }
-  .add-topic-form input{
-    background:var(--panel); border:1px solid var(--border); border-radius:6px; color:var(--text);
-    padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif;
-  }
-  .add-topic-form input[name="title"]{ flex:1; }
-  .add-topic-form input[name="xp"]{ width:60px; }
-  .add-topic-form button{
-    background:var(--panel); border:1px solid var(--gold-dim); color:var(--gold); border-radius:6px;
-    padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;
-  }
-  .add-topic-form button:hover{ border-color:var(--gold); }
-
-  .new-track-form{
-    display:flex; gap:8px; margin-bottom:14px;
-  }
-  .new-track-form input[name="icon"]{ width:52px; text-align:center; }
-  .new-track-form input[name="title"]{ flex:1; }
-  .new-track-form input{
-    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
-    padding:9px 10px; font-size:13px; font-family:'Inter',sans-serif;
-  }
-  .new-track-form button{
-    background:var(--gold); color:#1a1204; border:none; border-radius:6px; padding:9px 14px;
-    font-weight:700; font-size:13px; cursor:pointer;
-  }
-  .new-track-form button:hover{ background:#f2c159; }
 </style>
 </head>
 <body>
+
+<div id="animated-bg-layer"></div>
 
 <div id="app">
 
@@ -593,7 +443,7 @@
           </div>
         </div>
 
-        <!-- RIGHT: guild + conquistas, ou painel grande de nota -->
+        <!-- RIGHT: guild + conquistas -->
         <div id="right-column">
           <div id="side-default">
             <div class="panel">
@@ -605,34 +455,7 @@
               <div class="achievements-grid compact" id="achievements-grid"></div>
             </div>
           </div>
-
-          <div class="panel note-panel hidden" id="note-panel">
-            <div class="note-panel-head">
-              <button class="ghost" id="note-panel-back" type="button">← Voltar</button>
-              <div class="note-panel-heading">
-                <div class="note-panel-track" id="note-panel-track"></div>
-                <div class="note-panel-title" id="note-panel-title"></div>
-              </div>
-            </div>
-            <textarea class="note-panel-textarea" id="note-panel-textarea" placeholder="Anotações sobre este tópico..."></textarea>
-            <div class="note-panel-actions">
-              <button class="btn-save" id="note-panel-save" type="button">Salvar</button>
-            </div>
-          </div>
         </div>
-      </div>
-
-      <div class="panel knowledge-panel">
-        <h2>Área de Conhecimento</h2>
-        <div class="knowledge-toolbar">
-          <button type="button" id="new-track-toggle-btn">+ Nova trilha</button>
-        </div>
-        <form class="new-track-form hidden" id="new-track-form">
-          <input type="text" name="icon" maxlength="4" placeholder="📘">
-          <input type="text" name="title" placeholder="Nome da trilha (ex: Programação, Lua)" required maxlength="60">
-          <button type="submit">Criar</button>
-        </form>
-        <div class="track-list" id="track-list"></div>
       </div>
     </main>
   </div>
@@ -709,6 +532,11 @@
           <div class="hint">Aparece como uma nota ♪ ao lado do seu nome. Ao clicar, toca só o áudio; clicando de novo, pausa. Não mostra vídeo.</div>
         </div>
         <div class="field">
+          <label for="input-animated-bg">Fundo animado do site (imagem, GIF ou vídeo .mp4/.webm)</label>
+          <input type="url" id="input-animated-bg" name="animatedBg" placeholder="https://.../fundo.gif ou .mp4">
+          <div class="hint">Fica atrás de toda a tela, só na sua visão. Deixe em branco para não usar. Se o link não carregar, o app avisa e ignora o fundo.</div>
+        </div>
+        <div class="field">
           <label>Cor do tema</label>
           <div class="color-picker">
             <div class="sv-box" id="sv-box"><div class="sv-cursor" id="sv-cursor"></div></div>
@@ -727,6 +555,37 @@
           <button type="submit" class="btn-save">Salvar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- VIEW PROFILE MODAL (perfil de qualquer pessoa) -->
+  <div id="view-profile-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <button class="modal-close" id="close-view-profile-btn" type="button">×</button>
+      <div class="modal-preview-banner" id="view-profile-banner"></div>
+      <div style="text-align:center; margin-top:-58px;">
+        <div class="avatar-ring" id="view-profile-avatar-ring" style="margin:0 auto 14px;">
+          <img id="view-profile-avatar" src="" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''">
+        </div>
+        <div class="name" id="view-profile-name" style="justify-content:center;">
+          <span id="view-profile-name-text"></span>
+          <button class="note-btn hidden" id="view-profile-note-btn" type="button" title="Tocar/pausar música">♪</button>
+        </div>
+        <div class="level-block">
+          <div class="level-num mono" id="view-profile-level">1</div>
+          <div class="level-label">Nível</div>
+          <div class="xp-bar-outer"><div class="xp-bar-inner" id="view-profile-xp-bar"></div></div>
+          <div class="xp-text" id="view-profile-xp-text">0 / 100 XP</div>
+          <div class="streak-chip" id="view-profile-streak-chip">🔥 <span id="view-profile-streak-num">0</span> dias</div>
+        </div>
+      </div>
+      <div style="margin-top:22px;">
+        <h2 style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Conquistas</h2>
+        <div class="achievements-grid compact" id="view-profile-achievements"></div>
+      </div>
+      <div class="modal-actions" id="view-profile-edit-actions" style="display:none;">
+        <button type="button" class="btn-save" id="view-profile-edit-btn">✎ Editar meu perfil</button>
+      </div>
     </div>
   </div>
 </div>
@@ -777,16 +636,10 @@ const firebaseConfig = {
   let questsUnsub = null;
   let guildUnsub = null;
   let achievementsUnsub = null;
-  let tracksUnsub = null;
-  const topicsUnsubMap = new Map(); // trackId -> unsubscribe function
   let lastKnownLevel = 1;
   let myProfile = {};       // último snapshot dos dados do próprio usuário
   let achievementDefs = []; // último snapshot da coleção global "achievements"
   let currentQuestsSnapshot = null; // último snapshot das quests, usado para checar "dia perfeito"
-  const tracksData = new Map();  // trackId -> { ...trackFields, topics: [ {id, ...} ] }
-  const openTracks = new Set();  // trackIds atualmente expandidos
-  const openTopicNotes = new Set(); // (não usado mais — mantido por compatibilidade)
-  let activeTopicPopup = null; // `${trackId}:${topicId}` do popup de tópico atualmente aberto
 
   // avatar padrão (SVG embutido) usado quando um link de foto falha ao carregar
   window.__FALLBACK_AVATAR = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
@@ -829,6 +682,49 @@ const firebaseConfig = {
     img.onload = () => { _bgCache.set(url, 'ok'); el.style.backgroundImage = finalImg; };
     img.onerror = () => { _bgCache.set(url, 'fail'); el.style.backgroundImage = ''; };
     img.src = url;
+  }
+
+  // ---------- FUNDO ANIMADO DO SITE ----------
+  // Camada fixa atrás de tudo. Aceita imagem/GIF (via <img>) ou vídeo .mp4/.webm
+  // (via <video> mudo em loop). É uma preferência pessoal: só aparece pra quem
+  // configurou, igual à cor do tema.
+  let _lastAnimatedBgUrl = null;
+  function setAnimatedBackground(url){
+    const layer = document.getElementById('animated-bg-layer');
+    if(!layer) return;
+    if(url === _lastAnimatedBgUrl) return;
+    _lastAnimatedBgUrl = url;
+    layer.innerHTML = '';
+    layer.classList.remove('on');
+    if(!url) return;
+
+    const isVideo = /\.(mp4|webm)(\?.*)?$/i.test(url);
+    if(isVideo){
+      const video = document.createElement('video');
+      video.autoplay = true; video.loop = true; video.muted = true; video.playsInline = true;
+      video.addEventListener('error', () => {
+        showToast('Não foi possível carregar o fundo animado');
+        layer.innerHTML = ''; layer.classList.remove('on'); _lastAnimatedBgUrl = null;
+      });
+      video.src = url;
+      layer.appendChild(video);
+      layer.classList.add('on');
+    } else {
+      const img = new Image();
+      img.referrerPolicy = 'no-referrer';
+      img.onload = () => {
+        const el = document.createElement('img');
+        el.referrerPolicy = 'no-referrer';
+        el.src = url;
+        layer.appendChild(el);
+        layer.classList.add('on');
+      };
+      img.onerror = () => {
+        showToast('Não foi possível carregar o fundo animado');
+        _lastAnimatedBgUrl = null;
+      };
+      img.src = url;
+    }
   }
 
   // ---------- MÚSICA (áudio, sem vídeo visível) ----------
@@ -1103,14 +999,11 @@ const firebaseConfig = {
     if(questsUnsub){ questsUnsub(); questsUnsub = null; }
     if(guildUnsub){ guildUnsub(); guildUnsub = null; }
     if(achievementsUnsub){ achievementsUnsub(); achievementsUnsub = null; }
-    if(tracksUnsub){ tracksUnsub(); tracksUnsub = null; }
-    topicsUnsubMap.forEach((unsub) => unsub());
-    topicsUnsubMap.clear();
-    tracksData.clear();
 
     if(!user){
       currentUid = null;
       isAdmin = false;
+      setAnimatedBackground('');
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('hidden');
       document.getElementById('admin-view').classList.add('hidden');
@@ -1136,6 +1029,7 @@ const firebaseConfig = {
         bannerURL: '',
         musicUrl: '',
         musicVideoId: '',
+        animatedBgURL: '',
         xp: 0,
         streak: 0,
         lastActivityDate: null,
@@ -1163,6 +1057,7 @@ const firebaseConfig = {
         originalTheme = data.themeColor || DEFAULT_GOLD;
         applyTheme(originalTheme);
       }
+      setAnimatedBackground(data.animatedBgURL || '');
     });
 
     // listener das quests do usuário
@@ -1188,40 +1083,6 @@ const firebaseConfig = {
       renderAchievements();
       renderAdminList();
       checkAchievements(myProfile);
-    });
-
-    // listener das trilhas de conhecimento do usuário
-    const tracksCol = collection(db, 'users', user.uid, 'tracks');
-    tracksUnsub = onSnapshot(tracksCol, (tsnap) => {
-      const seenIds = new Set();
-      tsnap.forEach((tDoc) => {
-        const trackId = tDoc.id;
-        seenIds.add(trackId);
-        const existing = tracksData.get(trackId);
-        tracksData.set(trackId, { id: trackId, ...tDoc.data(), topics: existing ? existing.topics : [] });
-
-        if(!topicsUnsubMap.has(trackId)){
-          const topicsCol = collection(db, 'users', user.uid, 'tracks', trackId, 'topics');
-          const unsub = onSnapshot(topicsCol, (topicsSnap) => {
-            const topics = [];
-            topicsSnap.forEach((topicDoc) => topics.push({ id: topicDoc.id, ...topicDoc.data() }));
-            topics.sort((a, b) => (a.order || 0) - (b.order || 0));
-            const t = tracksData.get(trackId);
-            if(t){ t.topics = topics; }
-            renderTracks();
-          });
-          topicsUnsubMap.set(trackId, unsub);
-        }
-      });
-      // remove trilhas apagadas
-      Array.from(tracksData.keys()).forEach((id) => {
-        if(!seenIds.has(id)){
-          tracksData.delete(id);
-          const unsub = topicsUnsubMap.get(id);
-          if(unsub){ unsub(); topicsUnsubMap.delete(id); }
-        }
-      });
-      renderTracks();
     });
 
     renderRoute();
@@ -1291,6 +1152,16 @@ const firebaseConfig = {
     toggleMusic(e.currentTarget.dataset.uid, e.currentTarget.dataset.video);
   });
 
+  // clique no avatar/nome do próprio status abre a visão de perfil (com conquistas)
+  document.getElementById('avatar-ring').style.cursor = 'pointer';
+  document.getElementById('avatar-ring').addEventListener('click', () => {
+    if(currentUid) openProfileView(currentUid, myProfile);
+  });
+  document.getElementById('status-name-text').style.cursor = 'pointer';
+  document.getElementById('status-name-text').addEventListener('click', () => {
+    if(currentUid) openProfileView(currentUid, myProfile);
+  });
+
   // ---------- PERSONALIZAR PERFIL ----------
   const personalizeModal = document.getElementById('personalize-modal');
 
@@ -1298,6 +1169,7 @@ const firebaseConfig = {
     document.getElementById('input-banner').value = myProfile.bannerURL || '';
     document.getElementById('input-avatar').value = myProfile.customPhotoURL || '';
     document.getElementById('input-music').value = myProfile.musicUrl || '';
+    document.getElementById('input-animated-bg').value = myProfile.animatedBgURL || '';
     updateModalBannerPreview();
     originalTheme = myProfile.themeColor || DEFAULT_GOLD;
     initPicker(originalTheme);
@@ -1338,6 +1210,7 @@ const firebaseConfig = {
     const customPhotoURL = form.photoOverride.value.trim();
     const musicUrl = form.musicUrl.value.trim();
     const musicVideoId = musicUrl ? (extractYouTubeId(musicUrl) || '') : '';
+    const animatedBgURL = form.animatedBg.value.trim();
 
     if(musicUrl && !musicVideoId){
       showToast('Link do YouTube inválido');
@@ -1345,7 +1218,7 @@ const firebaseConfig = {
     }
 
     const userRef = doc(db, 'users', currentUid);
-    await updateDoc(userRef, { bannerURL, customPhotoURL, musicUrl, musicVideoId, themeColor: pickerHex });
+    await updateDoc(userRef, { bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgURL, themeColor: pickerHex });
     originalTheme = pickerHex;
     if(currentTrack.uid === currentUid && currentTrack.videoId !== musicVideoId){
       if(ytPlayer && ytPlayer.stopVideo){ ytPlayer.stopVideo(); }
@@ -1354,6 +1227,74 @@ const firebaseConfig = {
     }
     personalizeModal.classList.add('hidden');
     showToast('Perfil atualizado');
+  });
+
+  // ---------- VER PERFIL DE QUALQUER PESSOA ----------
+  const viewProfileModal = document.getElementById('view-profile-modal');
+
+  function openProfileView(uid, data){
+    data = data || {};
+    const xp = data.xp || 0;
+    const level = levelFromXp(xp);
+    const xpIntoLevel = xp % XP_PER_LEVEL;
+    const pct = (xpIntoLevel / XP_PER_LEVEL) * 100;
+    const avatarSrc = data.customPhotoURL || data.photoURL || '';
+
+    safeSetBackground(document.getElementById('view-profile-banner'), data.bannerURL);
+    document.getElementById('view-profile-avatar').src = avatarSrc;
+    document.getElementById('view-profile-avatar-ring').style.setProperty('--pct', pct + '%');
+    document.getElementById('view-profile-name-text').textContent = data.name || 'Aventureiro';
+    document.getElementById('view-profile-level').textContent = level;
+    document.getElementById('view-profile-xp-bar').style.width = pct + '%';
+    document.getElementById('view-profile-xp-text').textContent = `${xpIntoLevel} / ${XP_PER_LEVEL} XP`;
+
+    const streak = data.streak || 0;
+    document.getElementById('view-profile-streak-num').textContent = streak;
+    document.getElementById('view-profile-streak-chip').classList.toggle('show', streak > 0);
+
+    const noteBtn = document.getElementById('view-profile-note-btn');
+    if(data.musicVideoId){
+      noteBtn.classList.remove('hidden');
+      noteBtn.dataset.uid = uid;
+      noteBtn.dataset.video = data.musicVideoId;
+    } else {
+      noteBtn.classList.add('hidden');
+      delete noteBtn.dataset.uid;
+      delete noteBtn.dataset.video;
+    }
+    updateNoteButtons();
+
+    const achGrid = document.getElementById('view-profile-achievements');
+    achGrid.innerHTML = '';
+    const unlocked = new Set(data.unlockedAchievements || []);
+    if(!achievementDefs.length){
+      achGrid.innerHTML = '<p class="empty-note">Nenhuma conquista cadastrada ainda.</p>';
+    } else {
+      achievementDefs.forEach((def) => {
+        const isUnlocked = unlocked.has(def.id);
+        const isMystery = def.hidden && !isUnlocked;
+        const card = document.createElement('div');
+        card.className = 'ach-card ' + (isUnlocked ? 'unlocked' : 'locked') + (isMystery ? ' ach-mystery' : '');
+        card.innerHTML = `
+          <div class="ach-icon">${isMystery ? '❔' : (def.icon || '🏆')}</div>
+          <div class="ach-title">${isMystery ? '???' : def.title}</div>
+          <div class="ach-desc">${isMystery ? 'Conquista secreta' : (def.description || '')}</div>
+        `;
+        achGrid.appendChild(card);
+      });
+    }
+
+    document.getElementById('view-profile-edit-actions').style.display = (uid === currentUid) ? 'flex' : 'none';
+    viewProfileModal.classList.remove('hidden');
+  }
+
+  document.getElementById('close-view-profile-btn').addEventListener('click', () => viewProfileModal.classList.add('hidden'));
+  viewProfileModal.addEventListener('click', (e) => {
+    if(e.target === viewProfileModal) viewProfileModal.classList.add('hidden');
+  });
+  document.getElementById('view-profile-edit-btn').addEventListener('click', () => {
+    viewProfileModal.classList.add('hidden');
+    document.getElementById('open-personalize-btn').click();
   });
 
   // ---------- QUESTS ----------
@@ -1469,298 +1410,6 @@ const firebaseConfig = {
     }
   }
 
-  // ---------- ÁREA DE CONHECIMENTO (trilhas + tópicos) ----------
-  document.getElementById('new-track-toggle-btn').addEventListener('click', () => {
-    document.getElementById('new-track-form').classList.toggle('hidden');
-  });
-
-  document.getElementById('new-track-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if(!currentUid) return;
-    const form = e.target;
-    const icon = form.icon.value.trim() || '📘';
-    const title = form.title.value.trim();
-    if(!title) return;
-
-    try{
-      const tracksCol = collection(db, 'users', currentUid, 'tracks');
-      const newRef = doc(tracksCol);
-      await setDoc(newRef, { title, icon, order: Date.now() });
-      openTracks.add(newRef.id);
-      form.reset();
-      document.getElementById('new-track-form').classList.add('hidden');
-    }catch(err){
-      console.error(err);
-      showToast('Não foi possível criar a trilha (verifique as regras do Firestore)');
-    }
-  });
-
-  async function deleteTrack(trackId){
-    if(!currentUid) return;
-    try{
-      // apaga os tópicos da trilha primeiro
-      const t = tracksData.get(trackId);
-      const topics = t ? t.topics : [];
-      await Promise.all(topics.map((tp) => deleteDoc(doc(db, 'users', currentUid, 'tracks', trackId, 'topics', tp.id))));
-      await deleteDoc(doc(db, 'users', currentUid, 'tracks', trackId));
-      openTracks.delete(trackId);
-    }catch(err){
-      console.error(err);
-      showToast('Não foi possível remover a trilha');
-    }
-  }
-
-  async function addTopic(trackId, title, xpValue){
-    if(!currentUid || !title) return;
-    try{
-      const topicsCol = collection(db, 'users', currentUid, 'tracks', trackId, 'topics');
-      const newRef = doc(topicsCol);
-      await setDoc(newRef, { title, xpValue, note: '', completed: false, order: Date.now() });
-    }catch(err){
-      console.error(err);
-      showToast('Não foi possível criar o tópico (verifique as regras do Firestore)');
-    }
-  }
-
-  async function deleteTopic(trackId, topicId){
-    if(!currentUid) return;
-    try{
-      await deleteDoc(doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId));
-    }catch(err){
-      console.error(err);
-      showToast('Não foi possível remover o tópico');
-    }
-  }
-
-  // Marca/desmarca um tópico como aprendido. Concluir dá XP (como as quests);
-  // desmarcar de volta remove o mesmo XP, pra manter tudo consistente.
-  async function toggleTopic(trackId, topicId, xpValue, currentlyCompleted){
-    if(!currentUid) return;
-    try{
-      const topicRef = doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId);
-      const userRef = doc(db, 'users', currentUid);
-      const nowCompleted = !currentlyCompleted;
-      const today = todayStr();
-
-      await updateDoc(topicRef, { completed: nowCompleted });
-
-      const userSnap = await getDoc(userRef);
-      const u = userSnap.data() || {};
-      const currentXp = u.xp || 0;
-
-      if(nowCompleted){
-        const totalCompletions = (u.totalCompletions || 0) + 1;
-        let streak = u.streak || 0;
-        if(u.lastActivityDate === today){
-          // já contava hoje
-        } else if(u.lastActivityDate === yesterdayStr()){
-          streak = streak + 1;
-        } else {
-          streak = 1;
-        }
-        await updateDoc(userRef, {
-          xp: currentXp + xpValue,
-          totalCompletions,
-          streak,
-          lastActivityDate: today
-        });
-        showToast(`+${xpValue} XP`);
-      } else {
-        await updateDoc(userRef, { xp: Math.max(0, currentXp - xpValue) });
-      }
-    }catch(err){
-      console.error(err);
-      showToast('Não foi possível atualizar o tópico (verifique as regras do Firestore)');
-    }
-  }
-
-  async function saveTopicNote(trackId, topicId, note){
-    if(!currentUid) return;
-    try{
-      await updateDoc(doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId), { note });
-      showToast('Nota salva');
-    }catch(err){
-      console.error(err);
-      showToast('Não foi possível salvar a nota');
-    }
-  }
-
-  // ---------- Painel grande de nota (ocupa a coluna direita) ----------
-  let activeNote = null; // { trackId, topicId }
-  const sideDefaultEl = document.getElementById('side-default');
-  const notePanelEl = document.getElementById('note-panel');
-  const notePanelTrackEl = document.getElementById('note-panel-track');
-  const notePanelTitleEl = document.getElementById('note-panel-title');
-  const notePanelTextareaEl = document.getElementById('note-panel-textarea');
-
-  function openNotePanel(track, topic){
-    activeNote = { trackId: track.id, topicId: topic.id };
-    notePanelTrackEl.textContent = `${track.icon || '📘'} ${track.title}`;
-    notePanelTitleEl.textContent = topic.title;
-    notePanelTextareaEl.value = topic.note || '';
-    sideDefaultEl.classList.add('hidden');
-    notePanelEl.classList.remove('hidden');
-    notePanelTextareaEl.focus();
-  }
-
-  function closeNotePanel(){
-    activeNote = null;
-    notePanelEl.classList.add('hidden');
-    sideDefaultEl.classList.remove('hidden');
-  }
-
-  document.getElementById('note-panel-back').addEventListener('click', closeNotePanel);
-  document.getElementById('note-panel-save').addEventListener('click', () => {
-    if(!activeNote) return;
-    saveTopicNote(activeNote.trackId, activeNote.topicId, notePanelTextareaEl.value);
-  });
-
-  function renderTracks(){
-    const list = document.getElementById('track-list');
-    if(!list) return;
-    list.innerHTML = '';
-
-    const tracks = Array.from(tracksData.values()).sort((a, b) => (a.order || 0) - (b.order || 0));
-    if(tracks.length === 0){
-      list.innerHTML = '<p class="empty-note">Nenhuma trilha ainda. Crie a primeira acima — ex: "Programação" ou "Lua".</p>';
-      return;
-    }
-
-    tracks.forEach((track) => {
-      const topics = track.topics || [];
-      const total = topics.length;
-      const doneCount = topics.filter((tp) => tp.completed).length;
-      const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-      const isOpen = openTracks.has(track.id);
-
-      const card = document.createElement('div');
-      card.className = 'track-card' + (isOpen ? ' open' : '');
-
-      const head = document.createElement('div');
-      head.className = 'track-head';
-      head.innerHTML = `
-        <span class="ticon">${track.icon || '📘'}</span>
-        <div class="tinfo">
-          <div class="ttitle">${track.title}</div>
-          <div class="tprogress-text">${doneCount}/${total} tópicos${total ? ' · ' + pct + '%' : ''}</div>
-          <div class="tprogress-bar"><div class="tprogress-fill" style="width:${pct}%"></div></div>
-        </div>
-        <span class="tcaret">▶</span>
-      `;
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.className = 'track-del';
-      delBtn.textContent = '×';
-      delBtn.title = 'Remover trilha';
-      delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteTrack(track.id); });
-      head.appendChild(delBtn);
-
-      head.addEventListener('click', () => {
-        if(openTracks.has(track.id)){ openTracks.delete(track.id); } else { openTracks.add(track.id); }
-        renderTracks();
-      });
-
-      const body = document.createElement('div');
-      body.className = 'track-body';
-
-      if(total === 0){
-        const empty = document.createElement('p');
-        empty.className = 'empty-note';
-        empty.textContent = 'Nenhum tópico ainda. Adicione o primeiro abaixo.';
-        body.appendChild(empty);
-      } else {
-        const pathWrap = document.createElement('div');
-        pathWrap.className = 'path-wrap';
-        const line = document.createElement('div');
-        line.className = 'path-line';
-        pathWrap.appendChild(line);
-
-        const firstIncompleteIdx = topics.findIndex((tp) => !tp.completed);
-
-        topics.forEach((topic, idx) => {
-          const state = topic.completed ? 'done' : (idx === firstIncompleteIdx ? 'current' : 'locked');
-          const offset = Math.round(Math.sin(idx * 1.05) * 68);
-
-          const row = document.createElement('div');
-          row.className = 'path-row';
-
-          const slot = document.createElement('div');
-          slot.className = 'path-node-slot';
-          slot.style.transform = `translateX(${offset}px)`;
-
-          const node = document.createElement('button');
-          node.type = 'button';
-          node.className = 'path-node ' + state;
-          node.innerHTML = state === 'done' ? '✓' : (state === 'locked' ? '🔒' : (idx + 1));
-          node.title = state === 'locked' ? 'Conclua o tópico anterior primeiro' : topic.title;
-
-          const label = document.createElement('div');
-          label.className = 'path-node-title';
-          label.textContent = topic.title;
-
-          node.addEventListener('click', () => {
-            if(state === 'locked'){
-              showToast('Conclua o tópico anterior primeiro');
-              return;
-            }
-            const key = `${track.id}:${topic.id}`;
-            activeTopicPopup = (activeTopicPopup === key) ? null : key;
-            renderTracks();
-          });
-
-          slot.append(node, label);
-          row.appendChild(slot);
-          pathWrap.appendChild(row);
-
-          const key = `${track.id}:${topic.id}`;
-          if(activeTopicPopup === key){
-            const popup = document.createElement('div');
-            popup.className = 'path-popup';
-            const hasNote = !!(topic.note && topic.note.trim());
-            popup.innerHTML = `
-              <button type="button" class="pp-close">×</button>
-              <div class="pp-title">${topic.title}</div>
-              <div class="pp-xp">+${topic.xpValue || 0} XP</div>
-              <div class="pp-actions">
-                <button type="button" class="pp-complete">${topic.completed ? 'Desmarcar' : '✓ Concluir'}</button>
-                <button type="button" class="pp-note">${hasNote ? '📝 Ver nota' : '📝 Notas'}</button>
-              </div>
-              <button type="button" class="pp-del">Remover tópico</button>
-            `;
-            popup.querySelector('.pp-close').addEventListener('click', () => { activeTopicPopup = null; renderTracks(); });
-            popup.querySelector('.pp-complete').addEventListener('click', () => toggleTopic(track.id, topic.id, topic.xpValue || 0, topic.completed));
-            popup.querySelector('.pp-note').addEventListener('click', () => openNotePanel(track, topic));
-            popup.querySelector('.pp-del').addEventListener('click', () => { activeTopicPopup = null; deleteTopic(track.id, topic.id); });
-            pathWrap.appendChild(popup);
-          }
-        });
-
-        body.appendChild(pathWrap);
-      }
-
-      const addForm = document.createElement('form');
-      addForm.className = 'add-topic-form';
-      addForm.innerHTML = `
-        <input type="text" name="title" placeholder="Novo tópico..." required maxlength="80">
-        <input type="number" name="xp" placeholder="XP" required min="1" max="500" value="10">
-        <button type="submit">+</button>
-      `;
-      addForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const t = addForm.title.value.trim();
-        const xp = parseInt(addForm.xp.value, 10) || 10;
-        if(!t) return;
-        addTopic(track.id, t, xp);
-        addForm.reset();
-        addForm.xp.value = 10;
-      });
-      body.appendChild(addForm);
-
-      card.append(head, body);
-      list.appendChild(card);
-    });
-  }
-
   // ---------- GUILDA (amigos) ----------
   function renderGuild(gsnap){
     const list = document.getElementById('guild-list');
@@ -1785,6 +1434,8 @@ const firebaseConfig = {
 
       const row = document.createElement('div');
       row.className = 'guild-row' + (isMe ? ' me' : '');
+      row.style.cursor = 'pointer';
+      row.title = 'Ver perfil';
       if(u.bannerURL){
         row.style.backgroundImage = `linear-gradient(90deg, rgba(10,14,20,0.88), rgba(10,14,20,0.75)), url("${u.bannerURL}")`;
       }
@@ -1804,11 +1455,12 @@ const firebaseConfig = {
         <div class="guild-level mono">Nv.${level}</div>
       `;
       if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.88), rgba(10,14,20,0.75))'); }
+      row.addEventListener('click', () => openProfileView(uid, u));
       wrap.appendChild(row);
 
       const noteBtn = row.querySelector('.note-btn');
       if(noteBtn){
-        noteBtn.addEventListener('click', () => toggleMusic(uid, u.musicVideoId));
+        noteBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMusic(uid, u.musicVideoId); });
       }
     });
 
