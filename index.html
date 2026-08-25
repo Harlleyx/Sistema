@@ -200,7 +200,7 @@
 
   /* guild / friends */
   .guild-row{
-    display:flex; align-items:center; gap:12px; padding:12px 10px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px; padding:16px 12px; min-height:58px; border-bottom:1px solid var(--border);
     border-radius:8px; background-size:cover; background-position:center; position:relative;
   }
   .guild-row:last-child{ border-bottom:none; }
@@ -248,10 +248,17 @@
   .field input:focus{ outline:none; border-color:var(--cyan); }
   .field .hint{ font-size:11px; color:var(--text-dim); margin-top:5px; }
   .modal-preview-banner{
-    height:70px; border-radius:7px; margin-bottom:16px; background-size:cover; background-position:center;
+    height:70px; border-radius:7px; margin-bottom:6px; background-size:cover; background-position:center;
     background: linear-gradient(135deg, rgba(232,179,61,0.18), rgba(79,209,255,0.10));
     border:1px solid var(--border);
+    touch-action:none; user-select:none;
   }
+  .modal-preview-banner.draggable{ cursor:grab; }
+  .modal-preview-banner.draggable:active{ cursor:grabbing; }
+  .banner-drag-hint{
+    font-size:11px; color:var(--text-dim); margin-bottom:16px; display:none;
+  }
+  .banner-drag-hint.show{ display:block; }
   .modal-actions{ display:flex; gap:10px; margin-top:20px; }
   .modal-actions button{
     flex:1; padding:11px; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; border:1px solid var(--border);
@@ -523,6 +530,7 @@
       <h3>Personalizar Perfil</h3>
       <p class="modal-sub">Banner e foto precisam do link direto do arquivo de imagem/GIF (terminando em .jpg, .png ou .gif) — não o link de uma página. Do Pinterest, por exemplo: abra a imagem em tamanho grande e use "Copiar endereço da imagem", não o link do pin.</p>
       <div class="modal-preview-banner" id="modal-banner-preview"></div>
+      <p class="banner-drag-hint" id="banner-drag-hint">↔ Arraste dentro do banner acima para escolher a parte visível.</p>
       <form id="personalize-form">
         <div class="field">
           <label for="input-name">Nome de exibição</label>
@@ -684,15 +692,20 @@ const firebaseConfig = {
   // Aplica um background-image só depois de confirmar que a URL carrega de fato
   // (evita banner quebrado quando o link não é o arquivo direto da imagem)
   const _bgCache = new Map(); // url -> 'ok' | 'fail'
-  function safeSetBackground(el, url, overlay){
+  function safeSetBackground(el, url, overlay, posX, posY){
     const finalImg = overlay ? `${overlay}, url("${url}")` : `url("${url}")`;
+    const applyPos = () => {
+      const px = (posX === undefined || posX === null) ? 50 : posX;
+      const py = (posY === undefined || posY === null) ? 50 : posY;
+      el.style.backgroundPosition = px + '% ' + py + '%';
+    };
     if(!url){ el.style.backgroundImage = ''; return; }
     const cached = _bgCache.get(url);
-    if(cached === 'ok'){ el.style.backgroundImage = finalImg; return; }
+    if(cached === 'ok'){ el.style.backgroundImage = finalImg; applyPos(); return; }
     if(cached === 'fail'){ el.style.backgroundImage = ''; return; }
     const img = new Image();
     img.referrerPolicy = 'no-referrer';
-    img.onload = () => { _bgCache.set(url, 'ok'); el.style.backgroundImage = finalImg; };
+    img.onload = () => { _bgCache.set(url, 'ok'); el.style.backgroundImage = finalImg; applyPos(); };
     img.onerror = () => { _bgCache.set(url, 'fail'); el.style.backgroundImage = ''; };
     img.src = url;
   }
@@ -1010,6 +1023,18 @@ const firebaseConfig = {
   let pickerBgStyle = 'none';
   let originalBgStyle = 'none';
 
+  // ---------- POSIÇÃO DO BANNER (arrastar pra escolher a parte visível) ----------
+  let pickerBannerPosX = 50, pickerBannerPosY = 50;
+  let originalBannerPos = { x: 50, y: 50 };
+  let bannerHasImage = false;
+
+  const bannerPreviewEl = document.getElementById('modal-banner-preview');
+  const bannerDragHintEl = document.getElementById('banner-drag-hint');
+
+  function applyBannerPositionToPreview(){
+    bannerPreviewEl.style.backgroundPosition = pickerBannerPosX + '% ' + pickerBannerPosY + '%';
+  }
+
   function renderBgStyleGrid(){
     const wrap = document.getElementById('bgstyle-grid');
     if(!wrap) return;
@@ -1317,6 +1342,8 @@ const firebaseConfig = {
         customPhotoURL: '',
         customName: '',
         bannerURL: '',
+        bannerPosX: 50,
+        bannerPosY: 50,
         musicUrl: '',
         musicVideoId: '',
         animatedBgStyle: 'none',
@@ -1411,7 +1438,7 @@ const firebaseConfig = {
     document.getElementById('streak-num').textContent = streak;
     streakChip.classList.toggle('show', streak > 0);
 
-    safeSetBackground(document.getElementById('status-banner'), data.bannerURL);
+    safeSetBackground(document.getElementById('status-banner'), data.bannerURL, null, data.bannerPosX, data.bannerPosY);
 
     const noteBtn = document.getElementById('my-note-btn');
     if(data.musicVideoId){
@@ -1456,6 +1483,9 @@ const firebaseConfig = {
     document.getElementById('input-banner').value = myProfile.bannerURL || '';
     document.getElementById('input-avatar').value = myProfile.customPhotoURL || '';
     document.getElementById('input-music').value = myProfile.musicUrl || '';
+    pickerBannerPosX = (myProfile.bannerPosX !== undefined && myProfile.bannerPosX !== null) ? myProfile.bannerPosX : 50;
+    pickerBannerPosY = (myProfile.bannerPosY !== undefined && myProfile.bannerPosY !== null) ? myProfile.bannerPosY : 50;
+    originalBannerPos = { x: pickerBannerPosX, y: pickerBannerPosY };
     updateModalBannerPreview();
     originalTheme = myProfile.themeColor || DEFAULT_GOLD;
     initPicker(originalTheme);
@@ -1481,16 +1511,42 @@ const firebaseConfig = {
     clearTimeout(_bannerPreviewTimer);
     const val = document.getElementById('input-banner').value.trim();
     const preview = document.getElementById('modal-banner-preview');
-    if(!val){ preview.style.backgroundImage = ''; return; }
+    if(!val){
+      preview.style.backgroundImage = '';
+      preview.classList.remove('draggable');
+      bannerDragHintEl.classList.remove('show');
+      bannerHasImage = false;
+      return;
+    }
     _bannerPreviewTimer = setTimeout(() => {
       const img = new Image();
       img.referrerPolicy = 'no-referrer';
-      img.onload = () => { preview.style.backgroundImage = `url("${val}")`; };
-      img.onerror = () => { preview.style.backgroundImage = ''; showToast('Não carregou — use o link direto do arquivo de imagem'); };
+      img.onload = () => {
+        preview.style.backgroundImage = `url("${val}")`;
+        applyBannerPositionToPreview();
+        preview.classList.add('draggable');
+        bannerDragHintEl.classList.add('show');
+        bannerHasImage = true;
+      };
+      img.onerror = () => {
+        preview.style.backgroundImage = '';
+        preview.classList.remove('draggable');
+        bannerDragHintEl.classList.remove('show');
+        bannerHasImage = false;
+        showToast('Não carregou — use o link direto do arquivo de imagem');
+      };
       img.src = val;
     }, 500);
   }
   document.getElementById('input-banner').addEventListener('input', updateModalBannerPreview);
+
+  dragHandler(bannerPreviewEl, (e) => {
+    if(!bannerHasImage) return;
+    const rect = bannerPreviewEl.getBoundingClientRect();
+    pickerBannerPosX = Math.round(clamp01((e.clientX - rect.left) / rect.width) * 100);
+    pickerBannerPosY = Math.round(clamp01((e.clientY - rect.top) / rect.height) * 100);
+    applyBannerPositionToPreview();
+  });
 
   document.getElementById('personalize-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1509,9 +1565,13 @@ const firebaseConfig = {
     }
 
     const userRef = doc(db, 'users', currentUid);
-    await updateDoc(userRef, { customName, bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgStyle, themeColor: pickerHex });
+    await updateDoc(userRef, {
+      customName, bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgStyle,
+      themeColor: pickerHex, bannerPosX: pickerBannerPosX, bannerPosY: pickerBannerPosY
+    });
     originalTheme = pickerHex;
     originalBgStyle = animatedBgStyle;
+    originalBannerPos = { x: pickerBannerPosX, y: pickerBannerPosY };
     if(currentTrack.uid === currentUid && currentTrack.videoId !== musicVideoId){
       if(ytPlayer && ytPlayer.stopVideo){ ytPlayer.stopVideo(); }
       currentTrack = { uid: null, videoId: null, playing: false };
@@ -1532,7 +1592,7 @@ const firebaseConfig = {
     const pct = (xpIntoLevel / XP_PER_LEVEL) * 100;
     const avatarSrc = data.customPhotoURL || data.photoURL || '';
 
-    safeSetBackground(document.getElementById('view-profile-banner'), data.bannerURL);
+    safeSetBackground(document.getElementById('view-profile-banner'), data.bannerURL, null, data.bannerPosX, data.bannerPosY);
     document.getElementById('view-profile-avatar').src = avatarSrc;
     document.getElementById('view-profile-avatar-ring').style.setProperty('--pct', pct + '%');
     document.getElementById('view-profile-name-text').textContent = data.customName || data.name || 'Aventureiro';
@@ -1727,9 +1787,6 @@ const firebaseConfig = {
       row.className = 'guild-row' + (isMe ? ' me' : '');
       row.style.cursor = 'pointer';
       row.title = 'Ver perfil';
-      if(u.bannerURL){
-        row.style.backgroundImage = `linear-gradient(90deg, rgba(10,14,20,0.88), rgba(10,14,20,0.75)), url("${u.bannerURL}")`;
-      }
 
       const noteHtml = u.musicVideoId
         ? `<button class="note-btn" type="button" data-uid="${uid}" data-video="${u.musicVideoId}" title="Tocar/pausar música">♪</button>`
@@ -1745,7 +1802,7 @@ const firebaseConfig = {
         ${noteHtml}
         <div class="guild-level mono">Nv.${level}</div>
       `;
-      if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.88), rgba(10,14,20,0.75))'); }
+      if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.62) 0%, rgba(10,14,20,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
       row.addEventListener('click', () => openProfileView(uid, u));
       wrap.appendChild(row);
 
