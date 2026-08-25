@@ -421,6 +421,62 @@
   .track-body{ display:none; border-top:1px solid var(--border); padding:6px 16px 14px; }
   .track-card.open .track-body{ display:block; }
 
+  /* ---------- Caminho estilo Duolingo ---------- */
+  .path-wrap{ position:relative; padding:14px 6px 4px; }
+  .path-line{
+    position:absolute; left:50%; top:30px; bottom:30px; width:4px; transform:translateX(-50%);
+    background-image: repeating-linear-gradient(to bottom, var(--border) 0 10px, transparent 10px 20px);
+    border-radius:2px; z-index:0;
+  }
+  .path-row{ position:relative; z-index:1; display:flex; justify-content:center; padding:10px 0; }
+  .path-node-slot{ display:flex; flex-direction:column; align-items:center; gap:6px; transition: transform .2s; }
+  .path-node{
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--panel-2); display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; cursor:pointer;
+    color:var(--text-dim); box-shadow:0 4px 0 rgba(0,0,0,0.35); transition: transform .1s;
+  }
+  .path-node:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,0.35); }
+  .path-node.done{ background:var(--gold); color:#1a1204; box-shadow:0 4px 0 var(--gold-dim); }
+  .path-node.current{
+    background:var(--panel); color:var(--gold); box-shadow:0 4px 0 var(--gold-dim), 0 0 0 3px rgba(232,179,61,0.35);
+    animation: path-node-pulse 1.8s ease-in-out infinite;
+  }
+  .path-node.locked{ cursor:not-allowed; opacity:0.5; box-shadow:0 4px 0 rgba(0,0,0,0.25); }
+  @keyframes path-node-pulse{
+    0%, 100%{ box-shadow:0 4px 0 var(--gold-dim), 0 0 0 0 rgba(232,179,61,0.4); }
+    50%{ box-shadow:0 4px 0 var(--gold-dim), 0 0 0 8px rgba(232,179,61,0); }
+  }
+  .path-node-title{ font-size:11px; font-weight:700; text-align:center; max-width:120px; color:var(--text-dim); }
+  .path-node-slot:has(.path-node.done) .path-node-title{ color:var(--text); }
+  .path-node-slot:has(.path-node.current) .path-node-title{ color:var(--gold); }
+
+  .path-popup{
+    position:relative; z-index:2; margin:2px auto 16px; max-width:260px;
+    background:var(--panel); border:1px solid var(--gold-dim); border-radius:10px; padding:14px;
+    text-align:center; box-shadow:0 10px 26px rgba(0,0,0,0.45);
+  }
+  .path-popup .pp-close{
+    position:absolute; top:8px; right:10px; background:none; border:none; color:var(--text-dim);
+    cursor:pointer; font-size:15px;
+  }
+  .path-popup .pp-close:hover{ color:var(--danger); }
+  .path-popup .pp-title{ font-size:14px; font-weight:700; padding-right:14px; }
+  .path-popup .pp-xp{ font-family:'JetBrains Mono',monospace; color:var(--gold); font-size:12px; margin-top:4px; }
+  .path-popup .pp-actions{ display:flex; gap:8px; margin-top:12px; }
+  .path-popup .pp-actions button{
+    flex:1; padding:9px; border-radius:7px; font-weight:700; font-size:12px; cursor:pointer;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--text);
+  }
+  .path-popup .pp-complete{ background:var(--gold); color:#1a1204; border:none; }
+  .path-popup .pp-complete:hover{ background:#f2c159; }
+  .path-popup .pp-note:hover{ border-color:var(--cyan); color:var(--cyan); }
+  .path-popup .pp-del{
+    display:block; width:100%; margin-top:10px; background:none; border:none; color:var(--text-dim);
+    font-size:11px; cursor:pointer; text-decoration:underline;
+  }
+  .path-popup .pp-del:hover{ color:var(--danger); }
+
   .topic-item{ border-bottom:1px solid var(--border); padding:10px 0; }
   .topic-item:last-child{ border-bottom:none; }
   .topic-row{ display:flex; align-items:center; gap:10px; }
@@ -729,7 +785,8 @@ const firebaseConfig = {
   let currentQuestsSnapshot = null; // último snapshot das quests, usado para checar "dia perfeito"
   const tracksData = new Map();  // trackId -> { ...trackFields, topics: [ {id, ...} ] }
   const openTracks = new Set();  // trackIds atualmente expandidos
-  const openTopicNotes = new Set(); // `${trackId}:${topicId}` das notas atualmente abertas
+  const openTopicNotes = new Set(); // (não usado mais — mantido por compatibilidade)
+  let activeTopicPopup = null; // `${trackId}:${topicId}` do popup de tópico atualmente aberto
 
   // avatar padrão (SVG embutido) usado quando um link de foto falha ao carregar
   window.__FALLBACK_AVATAR = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
@@ -1612,51 +1669,73 @@ const firebaseConfig = {
         empty.textContent = 'Nenhum tópico ainda. Adicione o primeiro abaixo.';
         body.appendChild(empty);
       } else {
-        topics.forEach((topic) => {
-          const hasNote = !!(topic.note && topic.note.trim());
+        const pathWrap = document.createElement('div');
+        pathWrap.className = 'path-wrap';
+        const line = document.createElement('div');
+        line.className = 'path-line';
+        pathWrap.appendChild(line);
 
-          const item = document.createElement('div');
-          item.className = 'topic-item' + (topic.completed ? ' done' : '');
+        const firstIncompleteIdx = topics.findIndex((tp) => !tp.completed);
+
+        topics.forEach((topic, idx) => {
+          const state = topic.completed ? 'done' : (idx === firstIncompleteIdx ? 'current' : 'locked');
+          const offset = Math.round(Math.sin(idx * 1.05) * 68);
 
           const row = document.createElement('div');
-          row.className = 'topic-row';
+          row.className = 'path-row';
 
-          const check = document.createElement('button');
-          check.type = 'button';
-          check.className = 'quest-check' + (topic.completed ? ' done' : '');
-          check.textContent = topic.completed ? '✓' : '';
-          check.title = topic.completed ? 'Aprendido' : 'Marcar como aprendido';
-          check.addEventListener('click', () => toggleTopic(track.id, topic.id, topic.xpValue || 0, topic.completed));
+          const slot = document.createElement('div');
+          slot.className = 'path-node-slot';
+          slot.style.transform = `translateX(${offset}px)`;
 
-          const title = document.createElement('div');
-          title.className = 'topic-title';
-          title.textContent = topic.title;
-          title.title = 'Clique para ver/editar a nota';
-          title.addEventListener('click', () => openNotePanel(track, topic));
+          const node = document.createElement('button');
+          node.type = 'button';
+          node.className = 'path-node ' + state;
+          node.innerHTML = state === 'done' ? '✓' : (state === 'locked' ? '🔒' : (idx + 1));
+          node.title = state === 'locked' ? 'Conclua o tópico anterior primeiro' : topic.title;
 
-          const xpTag = document.createElement('div');
-          xpTag.className = 'topic-xp';
-          xpTag.textContent = `+${topic.xpValue || 0} XP`;
+          const label = document.createElement('div');
+          label.className = 'path-node-title';
+          label.textContent = topic.title;
 
-          const noteToggle = document.createElement('button');
-          noteToggle.type = 'button';
-          noteToggle.className = 'topic-note-toggle' + (hasNote ? ' has-note' : '');
-          noteToggle.textContent = '📝';
-          noteToggle.title = 'Ver/editar nota';
-          noteToggle.addEventListener('click', () => openNotePanel(track, topic));
+          node.addEventListener('click', () => {
+            if(state === 'locked'){
+              showToast('Conclua o tópico anterior primeiro');
+              return;
+            }
+            const key = `${track.id}:${topic.id}`;
+            activeTopicPopup = (activeTopicPopup === key) ? null : key;
+            renderTracks();
+          });
 
-          const del = document.createElement('button');
-          del.type = 'button';
-          del.className = 'topic-del';
-          del.textContent = '×';
-          del.title = 'Remover tópico';
-          del.addEventListener('click', () => deleteTopic(track.id, topic.id));
+          slot.append(node, label);
+          row.appendChild(slot);
+          pathWrap.appendChild(row);
 
-          row.append(check, title, xpTag, noteToggle, del);
-          item.appendChild(row);
-
-          body.appendChild(item);
+          const key = `${track.id}:${topic.id}`;
+          if(activeTopicPopup === key){
+            const popup = document.createElement('div');
+            popup.className = 'path-popup';
+            const hasNote = !!(topic.note && topic.note.trim());
+            popup.innerHTML = `
+              <button type="button" class="pp-close">×</button>
+              <div class="pp-title">${topic.title}</div>
+              <div class="pp-xp">+${topic.xpValue || 0} XP</div>
+              <div class="pp-actions">
+                <button type="button" class="pp-complete">${topic.completed ? 'Desmarcar' : '✓ Concluir'}</button>
+                <button type="button" class="pp-note">${hasNote ? '📝 Ver nota' : '📝 Notas'}</button>
+              </div>
+              <button type="button" class="pp-del">Remover tópico</button>
+            `;
+            popup.querySelector('.pp-close').addEventListener('click', () => { activeTopicPopup = null; renderTracks(); });
+            popup.querySelector('.pp-complete').addEventListener('click', () => toggleTopic(track.id, topic.id, topic.xpValue || 0, topic.completed));
+            popup.querySelector('.pp-note').addEventListener('click', () => openNotePanel(track, topic));
+            popup.querySelector('.pp-del').addEventListener('click', () => { activeTopicPopup = null; deleteTopic(track.id, topic.id); });
+            pathWrap.appendChild(popup);
+          }
         });
+
+        body.appendChild(pathWrap);
       }
 
       const addForm = document.createElement('form');
