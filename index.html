@@ -526,7 +526,7 @@
       <form id="personalize-form">
         <div class="field">
           <label for="input-name">Nome de exibição</label>
-          <input type="text" id="input-name" name="customName" maxlength="30" placeholder="Como quer ser chamado">
+          <input type="text" id="input-name" name="customName" maxlength="30" placeholder="Como quer ser chamado" autocomplete="off">
           <div class="hint">Deixe em branco para usar o nome da sua conta Google.</div>
         </div>
         <div class="field">
@@ -698,8 +698,6 @@ const firebaseConfig = {
   }
 
   // ---------- FUNDO ANIMADO DO SITE (gerado em canvas, sem links externos) ----------
-  // Camada fixa atrás de tudo, desenhada com canvas usando a cor do tema.
-  // É uma preferência pessoal: só aparece pra quem configurou, igual à cor do tema.
   const BG_STYLE_OPTIONS = [
     { key: 'none', icon: '✖', label: 'Nenhum' },
     { key: 'embers', icon: '✨', label: 'Brasas' },
@@ -876,7 +874,6 @@ const firebaseConfig = {
   function drawMatrix(){
     const { width, height } = bgCanvas;
     const c = currentThemeRgb();
-    // preenche com preto translúcido em vez de limpar, pra criar rastro
     bgCtx.fillStyle = 'rgba(10,14,20,0.15)';
     bgCtx.fillRect(0, 0, width, height);
     bgCtx.font = '14px monospace';
@@ -1032,14 +1029,9 @@ const firebaseConfig = {
   }
 
   // ---------- MÚSICA (áudio, sem vídeo visível) ----------
-  // Um único player fica escondido na página; clicar na nota ♪ toca/pausa.
-  // O estado de play/pause é controlado por uma flag própria (currentTrack.playing)
-  // em vez de perguntar ao player do YouTube, porque logo após criar o player
-  // (ou durante o buffer inicial) ytPlayer.getPlayerState() pode não refletir o
-  // estado real ainda — isso fazia o clique de "pausar" às vezes reiniciar a música.
   let ytPlayer = null;
   let ytApiReady = false;
-  let pendingTrack = null; // guarda { uid, videoId } se o clique aconteceu antes da API carregar
+  let pendingTrack = null;
   let currentTrack = { uid: null, videoId: null, playing: false };
 
   window.onYouTubeIframeAPIReady = function(){
@@ -1085,9 +1077,6 @@ const firebaseConfig = {
   function toggleMusic(uid, videoId){
     if(!videoId) return;
     if(currentTrack.uid === uid && currentTrack.videoId === videoId && ytPlayer){
-      // mesma música: alterna tocar/pausar usando nosso próprio estado
-      // (mais confiável do que ytPlayer.getPlayerState(), que pode estar
-      // desatualizado logo após o início da reprodução)
       if(currentTrack.playing){
         currentTrack.playing = false;
         updateNoteButtons();
@@ -1099,8 +1088,7 @@ const firebaseConfig = {
       }
       return;
     }
-    // trocando de música (ou primeiro clique)
-    updateNoteButtons(); // já marca como "carregando" visualmente
+    updateNoteButtons();
     if(!ytApiReady){
       pendingTrack = { uid, videoId };
       currentTrack = { uid, videoId, playing: false };
@@ -1177,14 +1165,11 @@ const firebaseConfig = {
     return rgbToHex(nr, ng, nb);
   }
 
-  // Gera uma cor de borda tingida com o tom do hex escolhido, mas ainda
-  // escura o suficiente para não competir com o texto (mistura com o
-  // cinza-azulado padrão das bordas).
   function borderTintFromHex(hex){
     const rgb = hexToRgb(hex);
     const base = hexToRgb(DEFAULT_BORDER);
     if(!rgb || !base) return DEFAULT_BORDER;
-    const mix = 0.45; // 45% da cor do tema, 55% do cinza padrão
+    const mix = 0.45;
     const nr = Math.round(rgb.r * mix + base.r * (1 - mix));
     const ng = Math.round(rgb.g * mix + base.g * (1 - mix));
     const nb = Math.round(rgb.b * mix + base.b * (1 - mix));
@@ -1343,14 +1328,12 @@ const firebaseConfig = {
         createdAt: serverTimestamp()
       });
     } else {
-      // mantém nome/foto do Google atualizados, sem mexer nas personalizações
       await updateDoc(userRef, {
         name: user.displayName || 'Aventureiro',
         photoURL: user.photoURL || ''
       });
     }
 
-    // listener do próprio status (xp/nivel/perfil em tempo real)
     onSnapshot(userRef, (docSnap) => {
       const data = docSnap.data();
       if(!data) return;
@@ -1367,7 +1350,6 @@ const firebaseConfig = {
       }
     });
 
-    // listener das quests do usuário
     const questsCol = collection(db, 'users', user.uid, 'quests');
     questsUnsub = onSnapshot(questsCol, (qsnap) => {
       currentQuestsSnapshot = qsnap;
@@ -1375,13 +1357,11 @@ const firebaseConfig = {
       checkAchievements(myProfile);
     });
 
-    // listener da guilda (todos os usuários, ordenados por xp)
     const guildQuery = query(collection(db, 'users'), orderBy('xp', 'desc'));
     guildUnsub = onSnapshot(guildQuery, (gsnap) => {
       renderGuild(gsnap);
     });
 
-    // listener global de conquistas (definidas pelo admin)
     const achievementsColRef = collection(db, 'achievements');
     achievementsUnsub = onSnapshot(achievementsColRef, (asnap) => {
       achievementDefs = [];
@@ -1459,7 +1439,6 @@ const firebaseConfig = {
     toggleMusic(e.currentTarget.dataset.uid, e.currentTarget.dataset.video);
   });
 
-  // clique no avatar/nome do próprio status abre a visão de perfil (com conquistas)
   document.getElementById('avatar-ring').style.cursor = 'pointer';
   document.getElementById('avatar-ring').addEventListener('click', () => {
     if(currentUid) openProfileView(currentUid, myProfile);
@@ -1488,8 +1467,8 @@ const firebaseConfig = {
 
   function closePersonalizeModal(){
     personalizeModal.classList.add('hidden');
-    applyTheme(originalTheme); // desfaz o preview ao vivo se não salvou
-    setAnimatedBackground(originalBgStyle); // idem para o fundo animado
+    applyTheme(originalTheme);
+    setAnimatedBackground(originalBgStyle);
   }
   document.getElementById('close-personalize-btn').addEventListener('click', closePersonalizeModal);
   document.getElementById('cancel-personalize-btn').addEventListener('click', closePersonalizeModal);
@@ -1680,7 +1659,7 @@ const firebaseConfig = {
   }
 
   async function completeQuest(questId, xpValue, alreadyDone){
-    if(!currentUid || alreadyDone) return; // só pode concluir 1x por dia
+    if(!currentUid || alreadyDone) return;
     const questRef = doc(db, 'users', currentUid, 'quests', questId);
     const userRef = doc(db, 'users', currentUid);
     const today = todayStr();
@@ -1692,7 +1671,6 @@ const firebaseConfig = {
     const currentXp = u.xp || 0;
     const totalCompletions = (u.totalCompletions || 0) + 1;
 
-    // streak: já ativo hoje não muda; ativo ontem soma 1; senão reinicia em 1
     let streak = u.streak || 0;
     if(u.lastActivityDate === today){
       // já contava hoje, mantém
