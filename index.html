@@ -315,16 +315,53 @@
     display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px;
     margin-top:4px;
   }
+  .achievements-grid.compact{
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap:9px;
+  }
   .ach-card{
     background: var(--panel-2); border:1px solid var(--border); border-radius:9px;
     padding:14px 12px; text-align:center; position:relative; transition: border-color .15s;
   }
+  .achievements-grid.compact .ach-card{ padding:10px 8px; border-radius:8px; }
   .ach-card.unlocked{ border-color: var(--gold); box-shadow: 0 0 0 1px rgba(232,179,61,0.15); }
   .ach-card.locked{ opacity:0.55; }
   .ach-icon{ font-size:26px; line-height:1; margin-bottom:8px; }
+  .achievements-grid.compact .ach-icon{ font-size:19px; margin-bottom:5px; }
   .ach-title{ font-size:12px; font-weight:700; letter-spacing:0.5px; }
+  .achievements-grid.compact .ach-title{ font-size:10.5px; }
   .ach-desc{ font-size:11px; color:var(--text-dim); margin-top:4px; line-height:1.4; }
+  .achievements-grid.compact .ach-desc{ font-size:9.5px; margin-top:3px; }
   .ach-mystery .ach-title, .ach-mystery .ach-desc{ color: var(--text-dim); }
+
+  /* ---------- Coluna direita (guilda/conquistas <-> painel de nota) ---------- */
+  #right-column{ display:flex; flex-direction:column; gap:22px; min-height:100%; }
+  #side-default{ display:flex; flex-direction:column; gap:22px; }
+  #achievements-panel-box{ flex:1; display:flex; flex-direction:column; }
+
+  .note-panel{ display:flex; flex-direction:column; min-height:560px; }
+  .note-panel-head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; }
+  .note-panel-heading{ min-width:0; }
+  .note-panel-track{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .note-panel-title{ font-size:17px; font-weight:700; margin-top:3px; }
+  .note-panel-textarea{
+    flex:1; width:100%; min-height:400px; resize:vertical;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:8px; color:var(--text);
+    padding:16px; font-size:14px; line-height:1.6; font-family:'Inter',sans-serif;
+  }
+  .note-panel-textarea:focus{ outline:none; border-color:var(--cyan); }
+  .note-panel-actions{ display:flex; justify-content:flex-end; margin-top:14px; }
+  .note-panel-actions .btn-save{
+    background:var(--gold); color:#1a1204; border:none; border-radius:7px; padding:10px 22px;
+    font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .note-panel-actions .btn-save:hover{ background:#f2c159; }
+  @media (max-width: 800px){
+    .note-panel{ min-height:420px; }
+    .note-panel-textarea{ min-height:280px; }
+  }
 
   /* ---------- Admin ---------- */
   .admin-link{ display:none; }
@@ -500,10 +537,32 @@
           </div>
         </div>
 
-        <!-- RIGHT: guild -->
-        <div class="panel">
-          <h2>Guilda</h2>
-          <div id="guild-list"></div>
+        <!-- RIGHT: guild + conquistas, ou painel grande de nota -->
+        <div id="right-column">
+          <div id="side-default">
+            <div class="panel">
+              <h2>Guilda</h2>
+              <div id="guild-list"></div>
+            </div>
+            <div class="panel" id="achievements-panel-box">
+              <h2>Conquistas</h2>
+              <div class="achievements-grid compact" id="achievements-grid"></div>
+            </div>
+          </div>
+
+          <div class="panel note-panel hidden" id="note-panel">
+            <div class="note-panel-head">
+              <button class="ghost" id="note-panel-back" type="button">← Voltar</button>
+              <div class="note-panel-heading">
+                <div class="note-panel-track" id="note-panel-track"></div>
+                <div class="note-panel-title" id="note-panel-title"></div>
+              </div>
+            </div>
+            <textarea class="note-panel-textarea" id="note-panel-textarea" placeholder="Anotações sobre este tópico..."></textarea>
+            <div class="note-panel-actions">
+              <button class="btn-save" id="note-panel-save" type="button">Salvar</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -518,11 +577,6 @@
           <button type="submit">Criar</button>
         </form>
         <div class="track-list" id="track-list"></div>
-      </div>
-
-      <div class="panel" style="margin-top:22px;">
-        <h2>Conquistas</h2>
-        <div class="achievements-grid" id="achievements-grid"></div>
       </div>
     </main>
   </div>
@@ -1371,12 +1425,17 @@ const firebaseConfig = {
     const title = form.title.value.trim();
     if(!title) return;
 
-    const tracksCol = collection(db, 'users', currentUid, 'tracks');
-    const newRef = doc(tracksCol);
-    await setDoc(newRef, { title, icon, order: Date.now() });
-    openTracks.add(newRef.id);
-    form.reset();
-    document.getElementById('new-track-form').classList.add('hidden');
+    try{
+      const tracksCol = collection(db, 'users', currentUid, 'tracks');
+      const newRef = doc(tracksCol);
+      await setDoc(newRef, { title, icon, order: Date.now() });
+      openTracks.add(newRef.id);
+      form.reset();
+      document.getElementById('new-track-form').classList.add('hidden');
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível criar a trilha (verifique as regras do Firestore)');
+    }
   });
 
   async function deleteTrack(trackId){
@@ -1396,9 +1455,14 @@ const firebaseConfig = {
 
   async function addTopic(trackId, title, xpValue){
     if(!currentUid || !title) return;
-    const topicsCol = collection(db, 'users', currentUid, 'tracks', trackId, 'topics');
-    const newRef = doc(topicsCol);
-    await setDoc(newRef, { title, xpValue, note: '', completed: false, order: Date.now() });
+    try{
+      const topicsCol = collection(db, 'users', currentUid, 'tracks', trackId, 'topics');
+      const newRef = doc(topicsCol);
+      await setDoc(newRef, { title, xpValue, note: '', completed: false, order: Date.now() });
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível criar o tópico (verifique as regras do Firestore)');
+    }
   }
 
   async function deleteTopic(trackId, topicId){
@@ -1415,36 +1479,41 @@ const firebaseConfig = {
   // desmarcar de volta remove o mesmo XP, pra manter tudo consistente.
   async function toggleTopic(trackId, topicId, xpValue, currentlyCompleted){
     if(!currentUid) return;
-    const topicRef = doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId);
-    const userRef = doc(db, 'users', currentUid);
-    const nowCompleted = !currentlyCompleted;
-    const today = todayStr();
+    try{
+      const topicRef = doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId);
+      const userRef = doc(db, 'users', currentUid);
+      const nowCompleted = !currentlyCompleted;
+      const today = todayStr();
 
-    await updateDoc(topicRef, { completed: nowCompleted });
+      await updateDoc(topicRef, { completed: nowCompleted });
 
-    const userSnap = await getDoc(userRef);
-    const u = userSnap.data() || {};
-    const currentXp = u.xp || 0;
+      const userSnap = await getDoc(userRef);
+      const u = userSnap.data() || {};
+      const currentXp = u.xp || 0;
 
-    if(nowCompleted){
-      const totalCompletions = (u.totalCompletions || 0) + 1;
-      let streak = u.streak || 0;
-      if(u.lastActivityDate === today){
-        // já contava hoje
-      } else if(u.lastActivityDate === yesterdayStr()){
-        streak = streak + 1;
+      if(nowCompleted){
+        const totalCompletions = (u.totalCompletions || 0) + 1;
+        let streak = u.streak || 0;
+        if(u.lastActivityDate === today){
+          // já contava hoje
+        } else if(u.lastActivityDate === yesterdayStr()){
+          streak = streak + 1;
+        } else {
+          streak = 1;
+        }
+        await updateDoc(userRef, {
+          xp: currentXp + xpValue,
+          totalCompletions,
+          streak,
+          lastActivityDate: today
+        });
+        showToast(`+${xpValue} XP`);
       } else {
-        streak = 1;
+        await updateDoc(userRef, { xp: Math.max(0, currentXp - xpValue) });
       }
-      await updateDoc(userRef, {
-        xp: currentXp + xpValue,
-        totalCompletions,
-        streak,
-        lastActivityDate: today
-      });
-      showToast(`+${xpValue} XP`);
-    } else {
-      await updateDoc(userRef, { xp: Math.max(0, currentXp - xpValue) });
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível atualizar o tópico (verifique as regras do Firestore)');
     }
   }
 
@@ -1458,6 +1527,36 @@ const firebaseConfig = {
       showToast('Não foi possível salvar a nota');
     }
   }
+
+  // ---------- Painel grande de nota (ocupa a coluna direita) ----------
+  let activeNote = null; // { trackId, topicId }
+  const sideDefaultEl = document.getElementById('side-default');
+  const notePanelEl = document.getElementById('note-panel');
+  const notePanelTrackEl = document.getElementById('note-panel-track');
+  const notePanelTitleEl = document.getElementById('note-panel-title');
+  const notePanelTextareaEl = document.getElementById('note-panel-textarea');
+
+  function openNotePanel(track, topic){
+    activeNote = { trackId: track.id, topicId: topic.id };
+    notePanelTrackEl.textContent = `${track.icon || '📘'} ${track.title}`;
+    notePanelTitleEl.textContent = topic.title;
+    notePanelTextareaEl.value = topic.note || '';
+    sideDefaultEl.classList.add('hidden');
+    notePanelEl.classList.remove('hidden');
+    notePanelTextareaEl.focus();
+  }
+
+  function closeNotePanel(){
+    activeNote = null;
+    notePanelEl.classList.add('hidden');
+    sideDefaultEl.classList.remove('hidden');
+  }
+
+  document.getElementById('note-panel-back').addEventListener('click', closeNotePanel);
+  document.getElementById('note-panel-save').addEventListener('click', () => {
+    if(!activeNote) return;
+    saveTopicNote(activeNote.trackId, activeNote.topicId, notePanelTextareaEl.value);
+  });
 
   function renderTracks(){
     const list = document.getElementById('track-list');
@@ -1514,8 +1613,6 @@ const firebaseConfig = {
         body.appendChild(empty);
       } else {
         topics.forEach((topic) => {
-          const noteKey = `${track.id}:${topic.id}`;
-          const noteOpen = openTopicNotes.has(noteKey);
           const hasNote = !!(topic.note && topic.note.trim());
 
           const item = document.createElement('div');
@@ -1535,10 +1632,7 @@ const firebaseConfig = {
           title.className = 'topic-title';
           title.textContent = topic.title;
           title.title = 'Clique para ver/editar a nota';
-          title.addEventListener('click', () => {
-            if(openTopicNotes.has(noteKey)){ openTopicNotes.delete(noteKey); } else { openTopicNotes.add(noteKey); }
-            renderTracks();
-          });
+          title.addEventListener('click', () => openNotePanel(track, topic));
 
           const xpTag = document.createElement('div');
           xpTag.className = 'topic-xp';
@@ -1549,10 +1643,7 @@ const firebaseConfig = {
           noteToggle.className = 'topic-note-toggle' + (hasNote ? ' has-note' : '');
           noteToggle.textContent = '📝';
           noteToggle.title = 'Ver/editar nota';
-          noteToggle.addEventListener('click', () => {
-            if(openTopicNotes.has(noteKey)){ openTopicNotes.delete(noteKey); } else { openTopicNotes.add(noteKey); }
-            renderTracks();
-          });
+          noteToggle.addEventListener('click', () => openNotePanel(track, topic));
 
           const del = document.createElement('button');
           del.type = 'button';
@@ -1563,19 +1654,6 @@ const firebaseConfig = {
 
           row.append(check, title, xpTag, noteToggle, del);
           item.appendChild(row);
-
-          const noteBox = document.createElement('div');
-          noteBox.className = 'topic-note-box' + (noteOpen ? ' open' : '');
-          const textarea = document.createElement('textarea');
-          textarea.placeholder = 'Anotações sobre este tópico...';
-          textarea.value = topic.note || '';
-          const saveBtn = document.createElement('button');
-          saveBtn.type = 'button';
-          saveBtn.className = 'topic-note-save';
-          saveBtn.textContent = 'Salvar';
-          saveBtn.addEventListener('click', () => saveTopicNote(track.id, topic.id, textarea.value));
-          noteBox.append(textarea, saveBtn);
-          item.appendChild(noteBox);
 
           body.appendChild(item);
         });
