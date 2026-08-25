@@ -370,14 +370,22 @@
 
   /* ---------- Fundo animado ---------- */
   #animated-bg-layer{
-    position:fixed; inset:0; z-index:-1; overflow:hidden; background:transparent; pointer-events:none;
+    position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
   }
-  #animated-bg-layer.on::after{
-    content:''; position:absolute; inset:0; background: rgba(10,14,20,0.72);
+  #animated-bg-layer canvas{ width:100%; height:100%; display:block; }
+
+  .bgstyle-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap:8px;
   }
-  #animated-bg-layer img, #animated-bg-layer video{
-    width:100%; height:100%; object-fit:cover; display:block;
+  .bgstyle-opt{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:8px;
+    padding:12px 6px; cursor:pointer; color:var(--text-dim); font-size:11px; font-family:'Inter',sans-serif;
+    transition: all .15s;
   }
+  .bgstyle-opt:hover{ border-color:var(--cyan); color:var(--text); }
+  .bgstyle-opt.selected{ border-color:var(--gold); color:var(--gold); background:rgba(232,179,61,0.08); }
+  .bgstyle-opt .bgstyle-icon{ font-size:20px; line-height:1; }
 </style>
 </head>
 <body>
@@ -532,9 +540,9 @@
           <div class="hint">Aparece como uma nota ♪ ao lado do seu nome. Ao clicar, toca só o áudio; clicando de novo, pausa. Não mostra vídeo.</div>
         </div>
         <div class="field">
-          <label for="input-animated-bg">Fundo animado do site (imagem, GIF ou vídeo .mp4/.webm)</label>
-          <input type="url" id="input-animated-bg" name="animatedBg" placeholder="https://.../fundo.gif ou .mp4">
-          <div class="hint">Fica atrás de toda a tela, só na sua visão. Deixe em branco para não usar. Se o link não carregar, o app avisa e ignora o fundo.</div>
+          <label>Fundo animado do site</label>
+          <div class="bgstyle-grid" id="bgstyle-grid"></div>
+          <div class="hint">Escolha um efeito animado sutil atrás de toda a tela, na cor do seu tema. Só aparece na sua visão.</div>
         </div>
         <div class="field">
           <label>Cor do tema</label>
@@ -684,47 +692,211 @@ const firebaseConfig = {
     img.src = url;
   }
 
-  // ---------- FUNDO ANIMADO DO SITE ----------
-  // Camada fixa atrás de tudo. Aceita imagem/GIF (via <img>) ou vídeo .mp4/.webm
-  // (via <video> mudo em loop). É uma preferência pessoal: só aparece pra quem
-  // configurou, igual à cor do tema.
-  let _lastAnimatedBgUrl = null;
-  function setAnimatedBackground(url){
-    const layer = document.getElementById('animated-bg-layer');
-    if(!layer) return;
-    if(url === _lastAnimatedBgUrl) return;
-    _lastAnimatedBgUrl = url;
-    layer.innerHTML = '';
-    layer.classList.remove('on');
-    if(!url) return;
+  // ---------- FUNDO ANIMADO DO SITE (gerado em canvas, sem links externos) ----------
+  // Camada fixa atrás de tudo, desenhada com canvas usando a cor do tema.
+  // É uma preferência pessoal: só aparece pra quem configurou, igual à cor do tema.
+  const BG_STYLE_OPTIONS = [
+    { key: 'none', icon: '✖', label: 'Nenhum' },
+    { key: 'embers', icon: '✨', label: 'Brasas' },
+    { key: 'constellation', icon: '✦', label: 'Constelação' },
+    { key: 'waves', icon: '〜', label: 'Ondas' },
+    { key: 'grid', icon: '▦', label: 'Grade' }
+  ];
 
-    const isVideo = /\.(mp4|webm)(\?.*)?$/i.test(url);
-    if(isVideo){
-      const video = document.createElement('video');
-      video.autoplay = true; video.loop = true; video.muted = true; video.playsInline = true;
-      video.addEventListener('error', () => {
-        showToast('Não foi possível carregar o fundo animado');
-        layer.innerHTML = ''; layer.classList.remove('on'); _lastAnimatedBgUrl = null;
-      });
-      video.src = url;
-      layer.appendChild(video);
-      layer.classList.add('on');
-    } else {
-      const img = new Image();
-      img.referrerPolicy = 'no-referrer';
-      img.onload = () => {
-        const el = document.createElement('img');
-        el.referrerPolicy = 'no-referrer';
-        el.src = url;
-        layer.appendChild(el);
-        layer.classList.add('on');
-      };
-      img.onerror = () => {
-        showToast('Não foi possível carregar o fundo animado');
-        _lastAnimatedBgUrl = null;
-      };
-      img.src = url;
+  let bgCanvas = null, bgCtx = null, bgAnimId = null, bgParticles = [];
+  let currentBgStyle = 'none';
+  let waveT = 0, gridT = 0;
+
+  function ensureBgCanvas(){
+    if(bgCanvas) return;
+    const layer = document.getElementById('animated-bg-layer');
+    bgCanvas = document.createElement('canvas');
+    bgCtx = bgCanvas.getContext('2d');
+    layer.appendChild(bgCanvas);
+    resizeBgCanvas();
+    window.addEventListener('resize', resizeBgCanvas);
+  }
+  function resizeBgCanvas(){
+    if(!bgCanvas) return;
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+  }
+  function currentThemeRgb(){
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || DEFAULT_GOLD;
+    return hexToRgb(hex) || hexToRgb(DEFAULT_GOLD);
+  }
+
+  function initEmbers(){
+    const { width, height } = bgCanvas;
+    bgParticles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 2 + 0.6,
+      speed: Math.random() * 0.5 + 0.15,
+      phase: Math.random() * Math.PI * 2,
+      alpha: Math.random() * 0.5 + 0.2
+    }));
+  }
+  function drawEmbers(){
+    const { width, height } = bgCanvas;
+    bgCtx.clearRect(0, 0, width, height);
+    const c = currentThemeRgb();
+    bgParticles.forEach((p) => {
+      p.y -= p.speed;
+      p.phase += 0.01;
+      p.x += Math.sin(p.phase) * 0.3;
+      if(p.y < -10){ p.y = height + 10; p.x = Math.random() * width; }
+      bgCtx.beginPath();
+      bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${p.alpha})`;
+      bgCtx.fill();
+    });
+  }
+
+  function initConstellation(){
+    const { width, height } = bgCanvas;
+    bgParticles = Array.from({ length: 46 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25
+    }));
+  }
+  function drawConstellation(){
+    const { width, height } = bgCanvas;
+    bgCtx.clearRect(0, 0, width, height);
+    const c = currentThemeRgb();
+    bgParticles.forEach((p) => {
+      p.x += p.vx; p.y += p.vy;
+      if(p.x < 0 || p.x > width) p.vx *= -1;
+      if(p.y < 0 || p.y > height) p.vy *= -1;
+    });
+    for(let i = 0; i < bgParticles.length; i++){
+      const a = bgParticles[i];
+      bgCtx.beginPath();
+      bgCtx.arc(a.x, a.y, 1.4, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.55)`;
+      bgCtx.fill();
+      for(let j = i + 1; j < bgParticles.length; j++){
+        const b = bgParticles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if(dist < 130){
+          bgCtx.beginPath();
+          bgCtx.moveTo(a.x, a.y);
+          bgCtx.lineTo(b.x, b.y);
+          bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${0.18 * (1 - dist / 130)})`;
+          bgCtx.lineWidth = 1;
+          bgCtx.stroke();
+        }
+      }
     }
+  }
+
+  function drawWaves(){
+    const { width, height } = bgCanvas;
+    bgCtx.clearRect(0, 0, width, height);
+    const c = currentThemeRgb();
+    waveT += 0.006;
+    const layers = [
+      { amp: 26, freq: 0.008, speed: 1.0, y: height * 0.72, alpha: 0.10 },
+      { amp: 34, freq: 0.006, speed: 0.6, y: height * 0.82, alpha: 0.08 },
+      { amp: 18, freq: 0.012, speed: 1.5, y: height * 0.90, alpha: 0.06 }
+    ];
+    layers.forEach((L) => {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, height);
+      for(let x = 0; x <= width; x += 8){
+        const y = L.y + Math.sin(x * L.freq + waveT * L.speed * 10) * L.amp;
+        bgCtx.lineTo(x, y);
+      }
+      bgCtx.lineTo(width, height);
+      bgCtx.closePath();
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${L.alpha})`;
+      bgCtx.fill();
+    });
+  }
+
+  function drawGrid(){
+    const { width, height } = bgCanvas;
+    bgCtx.clearRect(0, 0, width, height);
+    const c = currentThemeRgb();
+    gridT += 0.6;
+    const horizon = height * 0.55;
+    const spacing = 46;
+
+    for(let i = 0; i < 18; i++){
+      const t = ((i * spacing + gridT) % (spacing * 18)) / (spacing * 18);
+      const y = horizon + t * t * (height - horizon);
+      const alpha = 0.22 * (1 - t);
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y);
+      bgCtx.lineTo(width, y);
+      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${alpha})`;
+      bgCtx.lineWidth = 1;
+      bgCtx.stroke();
+    }
+    const vanishX = width / 2;
+    for(let i = -10; i <= 10; i++){
+      const xBase = vanishX + i * 70;
+      bgCtx.beginPath();
+      bgCtx.moveTo(vanishX, horizon);
+      bgCtx.lineTo(xBase, height);
+      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.12)`;
+      bgCtx.lineWidth = 1;
+      bgCtx.stroke();
+    }
+    const grad = bgCtx.createLinearGradient(0, horizon - 40, 0, horizon + 40);
+    grad.addColorStop(0, `rgba(${c.r},${c.g},${c.b},0)`);
+    grad.addColorStop(0.5, `rgba(${c.r},${c.g},${c.b},0.15)`);
+    grad.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
+    bgCtx.fillStyle = grad;
+    bgCtx.fillRect(0, horizon - 40, width, 80);
+  }
+
+  function bgAnimFrame(){
+    if(currentBgStyle === 'embers') drawEmbers();
+    else if(currentBgStyle === 'constellation') drawConstellation();
+    else if(currentBgStyle === 'waves') drawWaves();
+    else if(currentBgStyle === 'grid') drawGrid();
+    bgAnimId = requestAnimationFrame(bgAnimFrame);
+  }
+
+  function setAnimatedBackground(style){
+    style = style || 'none';
+    if(style === currentBgStyle) return;
+    currentBgStyle = style;
+
+    if(style === 'none'){
+      if(bgAnimId){ cancelAnimationFrame(bgAnimId); bgAnimId = null; }
+      if(bgCtx && bgCanvas){ bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height); }
+      return;
+    }
+    ensureBgCanvas();
+    if(style === 'embers') initEmbers();
+    else if(style === 'constellation') initConstellation();
+    if(!bgAnimId){ bgAnimId = requestAnimationFrame(bgAnimFrame); }
+  }
+
+  let pickerBgStyle = 'none';
+  let originalBgStyle = 'none';
+
+  function renderBgStyleGrid(){
+    const wrap = document.getElementById('bgstyle-grid');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    BG_STYLE_OPTIONS.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bgstyle-opt' + (pickerBgStyle === opt.key ? ' selected' : '');
+      btn.innerHTML = `<span class="bgstyle-icon">${opt.icon}</span><span>${opt.label}</span>`;
+      btn.addEventListener('click', () => {
+        pickerBgStyle = opt.key;
+        renderBgStyleGrid();
+        setAnimatedBackground(pickerBgStyle);
+      });
+      wrap.appendChild(btn);
+    });
   }
 
   // ---------- MÚSICA (áudio, sem vídeo visível) ----------
@@ -1003,7 +1175,7 @@ const firebaseConfig = {
     if(!user){
       currentUid = null;
       isAdmin = false;
-      setAnimatedBackground('');
+      setAnimatedBackground('none');
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('hidden');
       document.getElementById('admin-view').classList.add('hidden');
@@ -1029,7 +1201,7 @@ const firebaseConfig = {
         bannerURL: '',
         musicUrl: '',
         musicVideoId: '',
-        animatedBgURL: '',
+        animatedBgStyle: 'none',
         xp: 0,
         streak: 0,
         lastActivityDate: null,
@@ -1056,8 +1228,9 @@ const firebaseConfig = {
       if(personalizeModal.classList.contains('hidden')){
         originalTheme = data.themeColor || DEFAULT_GOLD;
         applyTheme(originalTheme);
+        originalBgStyle = data.animatedBgStyle || 'none';
+        setAnimatedBackground(originalBgStyle);
       }
-      setAnimatedBackground(data.animatedBgURL || '');
     });
 
     // listener das quests do usuário
@@ -1169,16 +1342,19 @@ const firebaseConfig = {
     document.getElementById('input-banner').value = myProfile.bannerURL || '';
     document.getElementById('input-avatar').value = myProfile.customPhotoURL || '';
     document.getElementById('input-music').value = myProfile.musicUrl || '';
-    document.getElementById('input-animated-bg').value = myProfile.animatedBgURL || '';
     updateModalBannerPreview();
     originalTheme = myProfile.themeColor || DEFAULT_GOLD;
     initPicker(originalTheme);
+    pickerBgStyle = myProfile.animatedBgStyle || 'none';
+    originalBgStyle = pickerBgStyle;
+    renderBgStyleGrid();
     personalizeModal.classList.remove('hidden');
   });
 
   function closePersonalizeModal(){
     personalizeModal.classList.add('hidden');
     applyTheme(originalTheme); // desfaz o preview ao vivo se não salvou
+    setAnimatedBackground(originalBgStyle); // idem para o fundo animado
   }
   document.getElementById('close-personalize-btn').addEventListener('click', closePersonalizeModal);
   document.getElementById('cancel-personalize-btn').addEventListener('click', closePersonalizeModal);
@@ -1210,7 +1386,7 @@ const firebaseConfig = {
     const customPhotoURL = form.photoOverride.value.trim();
     const musicUrl = form.musicUrl.value.trim();
     const musicVideoId = musicUrl ? (extractYouTubeId(musicUrl) || '') : '';
-    const animatedBgURL = form.animatedBg.value.trim();
+    const animatedBgStyle = pickerBgStyle;
 
     if(musicUrl && !musicVideoId){
       showToast('Link do YouTube inválido');
@@ -1218,8 +1394,9 @@ const firebaseConfig = {
     }
 
     const userRef = doc(db, 'users', currentUid);
-    await updateDoc(userRef, { bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgURL, themeColor: pickerHex });
+    await updateDoc(userRef, { bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgStyle, themeColor: pickerHex });
     originalTheme = pickerHex;
+    originalBgStyle = animatedBgStyle;
     if(currentTrack.uid === currentUid && currentTrack.videoId !== musicVideoId){
       if(ytPlayer && ytPlayer.stopVideo){ ytPlayer.stopVideo(); }
       currentTrack = { uid: null, videoId: null, playing: false };
