@@ -354,6 +354,89 @@
   .admin-item .ainfo .ameta{ font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'JetBrains Mono',monospace; }
   .admin-item .adel{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; }
   .admin-item .adel:hover{ color:var(--danger); }
+
+  /* ---------- Área de Conhecimento ---------- */
+  .knowledge-panel{ margin-top:22px; }
+  .knowledge-toolbar{ display:flex; justify-content:flex-end; margin-bottom:14px; margin-top:-42px; }
+  .knowledge-toolbar button{
+    background: var(--gold); color:#1a1204; border:none; border-radius:6px; padding:8px 14px;
+    font-weight:700; font-size:12px; cursor:pointer; font-family:'JetBrains Mono',monospace;
+  }
+  .knowledge-toolbar button:hover{ background:#f2c159; }
+  .track-list{ display:flex; flex-direction:column; gap:14px; }
+  .track-card{
+    border:1px solid var(--border); border-radius:9px; background:var(--panel-2); overflow:hidden;
+  }
+  .track-head{
+    display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer;
+    user-select:none;
+  }
+  .track-head .ticon{ font-size:20px; }
+  .track-head .tinfo{ flex:1; min-width:0; }
+  .track-head .ttitle{ font-size:14px; font-weight:700; }
+  .track-head .tprogress-text{ font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; margin-top:3px; }
+  .track-head .tprogress-bar{ height:5px; border-radius:3px; background:var(--panel); margin-top:6px; overflow:hidden; }
+  .track-head .tprogress-fill{ height:100%; background:var(--gold); transition:width .4s ease; }
+  .track-head .tcaret{ color:var(--text-dim); font-size:12px; transition: transform .2s; flex-shrink:0; }
+  .track-card.open .tcaret{ transform: rotate(90deg); }
+  .track-del{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; flex-shrink:0; }
+  .track-del:hover{ color:var(--danger); }
+  .track-body{ display:none; border-top:1px solid var(--border); padding:6px 16px 14px; }
+  .track-card.open .track-body{ display:block; }
+
+  .topic-item{ border-bottom:1px solid var(--border); padding:10px 0; }
+  .topic-item:last-child{ border-bottom:none; }
+  .topic-row{ display:flex; align-items:center; gap:10px; }
+  .topic-title{ flex:1; font-size:13px; cursor:pointer; }
+  .topic-item.done .topic-title{ color:var(--text-dim); text-decoration:line-through; }
+  .topic-xp{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); }
+  .topic-note-toggle{
+    background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:13px; padding:0 3px;
+  }
+  .topic-note-toggle:hover{ color:var(--cyan); }
+  .topic-note-toggle.has-note{ color:var(--cyan); }
+  .topic-del{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; padding:0 3px; }
+  .topic-del:hover{ color:var(--danger); }
+  .topic-note-box{ display:none; margin:8px 0 0 32px; }
+  .topic-note-box.open{ display:flex; gap:8px; align-items:flex-start; }
+  .topic-note-box textarea{
+    flex:1; min-height:56px; background:var(--panel); border:1px solid var(--border); border-radius:6px;
+    color:var(--text); padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif; resize:vertical;
+  }
+  .topic-note-box textarea:focus{ outline:none; border-color:var(--cyan); }
+  .topic-note-save{
+    background:var(--gold); color:#1a1204; border:none; border-radius:6px; padding:8px 10px;
+    font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0;
+  }
+  .topic-note-save:hover{ background:#f2c159; }
+
+  .add-topic-form{ display:flex; gap:8px; margin-top:10px; }
+  .add-topic-form input{
+    background:var(--panel); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif;
+  }
+  .add-topic-form input[name="title"]{ flex:1; }
+  .add-topic-form input[name="xp"]{ width:60px; }
+  .add-topic-form button{
+    background:var(--panel); border:1px solid var(--gold-dim); color:var(--gold); border-radius:6px;
+    padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .add-topic-form button:hover{ border-color:var(--gold); }
+
+  .new-track-form{
+    display:flex; gap:8px; margin-bottom:14px;
+  }
+  .new-track-form input[name="icon"]{ width:52px; text-align:center; }
+  .new-track-form input[name="title"]{ flex:1; }
+  .new-track-form input{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:9px 10px; font-size:13px; font-family:'Inter',sans-serif;
+  }
+  .new-track-form button{
+    background:var(--gold); color:#1a1204; border:none; border-radius:6px; padding:9px 14px;
+    font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .new-track-form button:hover{ background:#f2c159; }
 </style>
 </head>
 <body>
@@ -422,6 +505,19 @@
           <h2>Guilda</h2>
           <div id="guild-list"></div>
         </div>
+      </div>
+
+      <div class="panel knowledge-panel">
+        <h2>Área de Conhecimento</h2>
+        <div class="knowledge-toolbar">
+          <button type="button" id="new-track-toggle-btn">+ Nova trilha</button>
+        </div>
+        <form class="new-track-form hidden" id="new-track-form">
+          <input type="text" name="icon" maxlength="4" placeholder="📘">
+          <input type="text" name="title" placeholder="Nome da trilha (ex: Programação, Lua)" required maxlength="60">
+          <button type="submit">Criar</button>
+        </form>
+        <div class="track-list" id="track-list"></div>
       </div>
 
       <div class="panel" style="margin-top:22px;">
@@ -571,10 +667,15 @@ const firebaseConfig = {
   let questsUnsub = null;
   let guildUnsub = null;
   let achievementsUnsub = null;
+  let tracksUnsub = null;
+  const topicsUnsubMap = new Map(); // trackId -> unsubscribe function
   let lastKnownLevel = 1;
   let myProfile = {};       // último snapshot dos dados do próprio usuário
   let achievementDefs = []; // último snapshot da coleção global "achievements"
   let currentQuestsSnapshot = null; // último snapshot das quests, usado para checar "dia perfeito"
+  const tracksData = new Map();  // trackId -> { ...trackFields, topics: [ {id, ...} ] }
+  const openTracks = new Set();  // trackIds atualmente expandidos
+  const openTopicNotes = new Set(); // `${trackId}:${topicId}` das notas atualmente abertas
 
   // avatar padrão (SVG embutido) usado quando um link de foto falha ao carregar
   window.__FALLBACK_AVATAR = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
@@ -891,6 +992,10 @@ const firebaseConfig = {
     if(questsUnsub){ questsUnsub(); questsUnsub = null; }
     if(guildUnsub){ guildUnsub(); guildUnsub = null; }
     if(achievementsUnsub){ achievementsUnsub(); achievementsUnsub = null; }
+    if(tracksUnsub){ tracksUnsub(); tracksUnsub = null; }
+    topicsUnsubMap.forEach((unsub) => unsub());
+    topicsUnsubMap.clear();
+    tracksData.clear();
 
     if(!user){
       currentUid = null;
@@ -972,6 +1077,40 @@ const firebaseConfig = {
       renderAchievements();
       renderAdminList();
       checkAchievements(myProfile);
+    });
+
+    // listener das trilhas de conhecimento do usuário
+    const tracksCol = collection(db, 'users', user.uid, 'tracks');
+    tracksUnsub = onSnapshot(tracksCol, (tsnap) => {
+      const seenIds = new Set();
+      tsnap.forEach((tDoc) => {
+        const trackId = tDoc.id;
+        seenIds.add(trackId);
+        const existing = tracksData.get(trackId);
+        tracksData.set(trackId, { id: trackId, ...tDoc.data(), topics: existing ? existing.topics : [] });
+
+        if(!topicsUnsubMap.has(trackId)){
+          const topicsCol = collection(db, 'users', user.uid, 'tracks', trackId, 'topics');
+          const unsub = onSnapshot(topicsCol, (topicsSnap) => {
+            const topics = [];
+            topicsSnap.forEach((topicDoc) => topics.push({ id: topicDoc.id, ...topicDoc.data() }));
+            topics.sort((a, b) => (a.order || 0) - (b.order || 0));
+            const t = tracksData.get(trackId);
+            if(t){ t.topics = topics; }
+            renderTracks();
+          });
+          topicsUnsubMap.set(trackId, unsub);
+        }
+      });
+      // remove trilhas apagadas
+      Array.from(tracksData.keys()).forEach((id) => {
+        if(!seenIds.has(id)){
+          tracksData.delete(id);
+          const unsub = topicsUnsubMap.get(id);
+          if(unsub){ unsub(); topicsUnsubMap.delete(id); }
+        }
+      });
+      renderTracks();
     });
 
     renderRoute();
@@ -1217,6 +1356,252 @@ const firebaseConfig = {
       console.error(err);
       showToast('Não foi possível remover a quest');
     }
+  }
+
+  // ---------- ÁREA DE CONHECIMENTO (trilhas + tópicos) ----------
+  document.getElementById('new-track-toggle-btn').addEventListener('click', () => {
+    document.getElementById('new-track-form').classList.toggle('hidden');
+  });
+
+  document.getElementById('new-track-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!currentUid) return;
+    const form = e.target;
+    const icon = form.icon.value.trim() || '📘';
+    const title = form.title.value.trim();
+    if(!title) return;
+
+    const tracksCol = collection(db, 'users', currentUid, 'tracks');
+    const newRef = doc(tracksCol);
+    await setDoc(newRef, { title, icon, order: Date.now() });
+    openTracks.add(newRef.id);
+    form.reset();
+    document.getElementById('new-track-form').classList.add('hidden');
+  });
+
+  async function deleteTrack(trackId){
+    if(!currentUid) return;
+    try{
+      // apaga os tópicos da trilha primeiro
+      const t = tracksData.get(trackId);
+      const topics = t ? t.topics : [];
+      await Promise.all(topics.map((tp) => deleteDoc(doc(db, 'users', currentUid, 'tracks', trackId, 'topics', tp.id))));
+      await deleteDoc(doc(db, 'users', currentUid, 'tracks', trackId));
+      openTracks.delete(trackId);
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível remover a trilha');
+    }
+  }
+
+  async function addTopic(trackId, title, xpValue){
+    if(!currentUid || !title) return;
+    const topicsCol = collection(db, 'users', currentUid, 'tracks', trackId, 'topics');
+    const newRef = doc(topicsCol);
+    await setDoc(newRef, { title, xpValue, note: '', completed: false, order: Date.now() });
+  }
+
+  async function deleteTopic(trackId, topicId){
+    if(!currentUid) return;
+    try{
+      await deleteDoc(doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId));
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível remover o tópico');
+    }
+  }
+
+  // Marca/desmarca um tópico como aprendido. Concluir dá XP (como as quests);
+  // desmarcar de volta remove o mesmo XP, pra manter tudo consistente.
+  async function toggleTopic(trackId, topicId, xpValue, currentlyCompleted){
+    if(!currentUid) return;
+    const topicRef = doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId);
+    const userRef = doc(db, 'users', currentUid);
+    const nowCompleted = !currentlyCompleted;
+    const today = todayStr();
+
+    await updateDoc(topicRef, { completed: nowCompleted });
+
+    const userSnap = await getDoc(userRef);
+    const u = userSnap.data() || {};
+    const currentXp = u.xp || 0;
+
+    if(nowCompleted){
+      const totalCompletions = (u.totalCompletions || 0) + 1;
+      let streak = u.streak || 0;
+      if(u.lastActivityDate === today){
+        // já contava hoje
+      } else if(u.lastActivityDate === yesterdayStr()){
+        streak = streak + 1;
+      } else {
+        streak = 1;
+      }
+      await updateDoc(userRef, {
+        xp: currentXp + xpValue,
+        totalCompletions,
+        streak,
+        lastActivityDate: today
+      });
+      showToast(`+${xpValue} XP`);
+    } else {
+      await updateDoc(userRef, { xp: Math.max(0, currentXp - xpValue) });
+    }
+  }
+
+  async function saveTopicNote(trackId, topicId, note){
+    if(!currentUid) return;
+    try{
+      await updateDoc(doc(db, 'users', currentUid, 'tracks', trackId, 'topics', topicId), { note });
+      showToast('Nota salva');
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível salvar a nota');
+    }
+  }
+
+  function renderTracks(){
+    const list = document.getElementById('track-list');
+    if(!list) return;
+    list.innerHTML = '';
+
+    const tracks = Array.from(tracksData.values()).sort((a, b) => (a.order || 0) - (b.order || 0));
+    if(tracks.length === 0){
+      list.innerHTML = '<p class="empty-note">Nenhuma trilha ainda. Crie a primeira acima — ex: "Programação" ou "Lua".</p>';
+      return;
+    }
+
+    tracks.forEach((track) => {
+      const topics = track.topics || [];
+      const total = topics.length;
+      const doneCount = topics.filter((tp) => tp.completed).length;
+      const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+      const isOpen = openTracks.has(track.id);
+
+      const card = document.createElement('div');
+      card.className = 'track-card' + (isOpen ? ' open' : '');
+
+      const head = document.createElement('div');
+      head.className = 'track-head';
+      head.innerHTML = `
+        <span class="ticon">${track.icon || '📘'}</span>
+        <div class="tinfo">
+          <div class="ttitle">${track.title}</div>
+          <div class="tprogress-text">${doneCount}/${total} tópicos${total ? ' · ' + pct + '%' : ''}</div>
+          <div class="tprogress-bar"><div class="tprogress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <span class="tcaret">▶</span>
+      `;
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'track-del';
+      delBtn.textContent = '×';
+      delBtn.title = 'Remover trilha';
+      delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteTrack(track.id); });
+      head.appendChild(delBtn);
+
+      head.addEventListener('click', () => {
+        if(openTracks.has(track.id)){ openTracks.delete(track.id); } else { openTracks.add(track.id); }
+        renderTracks();
+      });
+
+      const body = document.createElement('div');
+      body.className = 'track-body';
+
+      if(total === 0){
+        const empty = document.createElement('p');
+        empty.className = 'empty-note';
+        empty.textContent = 'Nenhum tópico ainda. Adicione o primeiro abaixo.';
+        body.appendChild(empty);
+      } else {
+        topics.forEach((topic) => {
+          const noteKey = `${track.id}:${topic.id}`;
+          const noteOpen = openTopicNotes.has(noteKey);
+          const hasNote = !!(topic.note && topic.note.trim());
+
+          const item = document.createElement('div');
+          item.className = 'topic-item' + (topic.completed ? ' done' : '');
+
+          const row = document.createElement('div');
+          row.className = 'topic-row';
+
+          const check = document.createElement('button');
+          check.type = 'button';
+          check.className = 'quest-check' + (topic.completed ? ' done' : '');
+          check.textContent = topic.completed ? '✓' : '';
+          check.title = topic.completed ? 'Aprendido' : 'Marcar como aprendido';
+          check.addEventListener('click', () => toggleTopic(track.id, topic.id, topic.xpValue || 0, topic.completed));
+
+          const title = document.createElement('div');
+          title.className = 'topic-title';
+          title.textContent = topic.title;
+          title.title = 'Clique para ver/editar a nota';
+          title.addEventListener('click', () => {
+            if(openTopicNotes.has(noteKey)){ openTopicNotes.delete(noteKey); } else { openTopicNotes.add(noteKey); }
+            renderTracks();
+          });
+
+          const xpTag = document.createElement('div');
+          xpTag.className = 'topic-xp';
+          xpTag.textContent = `+${topic.xpValue || 0} XP`;
+
+          const noteToggle = document.createElement('button');
+          noteToggle.type = 'button';
+          noteToggle.className = 'topic-note-toggle' + (hasNote ? ' has-note' : '');
+          noteToggle.textContent = '📝';
+          noteToggle.title = 'Ver/editar nota';
+          noteToggle.addEventListener('click', () => {
+            if(openTopicNotes.has(noteKey)){ openTopicNotes.delete(noteKey); } else { openTopicNotes.add(noteKey); }
+            renderTracks();
+          });
+
+          const del = document.createElement('button');
+          del.type = 'button';
+          del.className = 'topic-del';
+          del.textContent = '×';
+          del.title = 'Remover tópico';
+          del.addEventListener('click', () => deleteTopic(track.id, topic.id));
+
+          row.append(check, title, xpTag, noteToggle, del);
+          item.appendChild(row);
+
+          const noteBox = document.createElement('div');
+          noteBox.className = 'topic-note-box' + (noteOpen ? ' open' : '');
+          const textarea = document.createElement('textarea');
+          textarea.placeholder = 'Anotações sobre este tópico...';
+          textarea.value = topic.note || '';
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'topic-note-save';
+          saveBtn.textContent = 'Salvar';
+          saveBtn.addEventListener('click', () => saveTopicNote(track.id, topic.id, textarea.value));
+          noteBox.append(textarea, saveBtn);
+          item.appendChild(noteBox);
+
+          body.appendChild(item);
+        });
+      }
+
+      const addForm = document.createElement('form');
+      addForm.className = 'add-topic-form';
+      addForm.innerHTML = `
+        <input type="text" name="title" placeholder="Novo tópico..." required maxlength="80">
+        <input type="number" name="xp" placeholder="XP" required min="1" max="500" value="10">
+        <button type="submit">+</button>
+      `;
+      addForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const t = addForm.title.value.trim();
+        const xp = parseInt(addForm.xp.value, 10) || 10;
+        if(!t) return;
+        addTopic(track.id, t, xp);
+        addForm.reset();
+        addForm.xp.value = 10;
+      });
+      body.appendChild(addForm);
+
+      card.append(head, body);
+      list.appendChild(card);
+    });
   }
 
   // ---------- GUILDA (amigos) ----------
