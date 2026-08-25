@@ -525,6 +525,11 @@
       <div class="modal-preview-banner" id="modal-banner-preview"></div>
       <form id="personalize-form">
         <div class="field">
+          <label for="input-name">Nome de exibição</label>
+          <input type="text" id="input-name" name="customName" maxlength="30" placeholder="Como quer ser chamado">
+          <div class="hint">Deixe em branco para usar o nome da sua conta Google.</div>
+        </div>
+        <div class="field">
           <label for="input-banner">Banner (link direto da imagem ou GIF)</label>
           <input type="url" id="input-banner" name="bannerURL" placeholder="https://i.pinimg.com/.../banner.gif">
           <div class="hint">Deixe em branco para usar o fundo padrão. Se o link não carregar, o app avisa e ignora o banner.</div>
@@ -1325,6 +1330,7 @@ const firebaseConfig = {
         name: user.displayName || 'Aventureiro',
         photoURL: user.photoURL || '',
         customPhotoURL: '',
+        customName: '',
         bannerURL: '',
         musicUrl: '',
         musicVideoId: '',
@@ -1349,6 +1355,7 @@ const firebaseConfig = {
       const data = docSnap.data();
       if(!data) return;
       myProfile = data;
+      document.getElementById('topbar-name').textContent = data.customName || data.name || 'Aventureiro';
       renderStatus(data);
       renderAchievements();
       checkAchievements(data);
@@ -1417,7 +1424,7 @@ const firebaseConfig = {
     document.getElementById('xp-text').textContent = `${xpIntoLevel} / ${XP_PER_LEVEL} XP`;
     document.getElementById('avatar-ring').style.setProperty('--pct', pct + '%');
     document.getElementById('status-avatar').src = avatarSrc;
-    document.getElementById('status-name-text').textContent = data.name || 'Aventureiro';
+    document.getElementById('status-name-text').textContent = data.customName || data.name || 'Aventureiro';
 
     const streak = data.streak || 0;
     const streakChip = document.getElementById('streak-chip');
@@ -1466,6 +1473,7 @@ const firebaseConfig = {
   const personalizeModal = document.getElementById('personalize-modal');
 
   document.getElementById('open-personalize-btn').addEventListener('click', () => {
+    document.getElementById('input-name').value = myProfile.customName || '';
     document.getElementById('input-banner').value = myProfile.bannerURL || '';
     document.getElementById('input-avatar').value = myProfile.customPhotoURL || '';
     document.getElementById('input-music').value = myProfile.musicUrl || '';
@@ -1509,6 +1517,7 @@ const firebaseConfig = {
     e.preventDefault();
     if(!currentUid) return;
     const form = e.target;
+    const customName = form.customName.value.trim();
     const bannerURL = form.bannerURL.value.trim();
     const customPhotoURL = form.photoOverride.value.trim();
     const musicUrl = form.musicUrl.value.trim();
@@ -1521,7 +1530,7 @@ const firebaseConfig = {
     }
 
     const userRef = doc(db, 'users', currentUid);
-    await updateDoc(userRef, { bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgStyle, themeColor: pickerHex });
+    await updateDoc(userRef, { customName, bannerURL, customPhotoURL, musicUrl, musicVideoId, animatedBgStyle, themeColor: pickerHex });
     originalTheme = pickerHex;
     originalBgStyle = animatedBgStyle;
     if(currentTrack.uid === currentUid && currentTrack.videoId !== musicVideoId){
@@ -1547,7 +1556,7 @@ const firebaseConfig = {
     safeSetBackground(document.getElementById('view-profile-banner'), data.bannerURL);
     document.getElementById('view-profile-avatar').src = avatarSrc;
     document.getElementById('view-profile-avatar-ring').style.setProperty('--pct', pct + '%');
-    document.getElementById('view-profile-name-text').textContent = data.name || 'Aventureiro';
+    document.getElementById('view-profile-name-text').textContent = data.customName || data.name || 'Aventureiro';
     document.getElementById('view-profile-level').textContent = level;
     document.getElementById('view-profile-xp-bar').style.width = pct + '%';
     document.getElementById('view-profile-xp-text').textContent = `${xpIntoLevel} / ${XP_PER_LEVEL} XP`;
@@ -1752,7 +1761,7 @@ const firebaseConfig = {
         <div class="rank-num">${rank}</div>
         <img src="${avatarSrc}" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''">
         <div class="guild-info">
-          <div class="gname">${u.name || 'Aventureiro'}${isMe ? '<span class="you-tag">VOCÊ</span>' : ''}</div>
+          <div class="gname">${u.customName || u.name || 'Aventureiro'}${isMe ? '<span class="you-tag">VOCÊ</span>' : ''}</div>
           <div class="mini-bar-outer"><div class="mini-bar-inner" style="width:${pct}%"></div></div>
         </div>
         ${noteHtml}
