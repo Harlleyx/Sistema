@@ -6,269 +6,274 @@
 <meta name="referrer" content="no-referrer">
 <title>SISTEMA — Evolução Real</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0b0c16;
-    --panel: #14152699;
-    --panel-solid: #14152a;
-    --panel-2: #1b1c33;
-    --border: #2a2c48;
-    --gold: #8b5cf6;
-    --gold-dim: #6d3fe0;
-    --cyan: #22d3ee;
-    --pink: #f472b6;
-    --text: #eef0fb;
-    --text-dim: #8c8db0;
-    --danger: #fb7185;
-    --ok: #34d399;
+    --bg: #0a0e14;
+    --panel: #10161f;
+    --panel-2: #141c28;
+    --border: #1f2a38;
+    --gold: #e8b33d;
+    --gold-dim: #a67f2c;
+    --cyan: #4fd1ff;
+    --text: #e6edf3;
+    --text-dim: #7d8ba0;
+    --danger: #e5484d;
+    --ok: #3ecf8e;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
-    background:
-      radial-gradient(circle at 15% -10%, #241a44 0%, transparent 40%),
-      radial-gradient(circle at 100% 0%, #142a3a 0%, transparent 45%),
-      var(--bg);
+    background: radial-gradient(circle at 20% -10%, #131b28 0%, var(--bg) 45%);
     color: var(--text);
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
   }
-  .mono{ font-family:'Space Grotesk', monospace; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
   a{ color: var(--cyan); }
 
+  /* ---------- Layout shells ---------- */
   #app{ min-height:100vh; display:flex; flex-direction:column; }
   .hidden{ display:none !important; }
 
   header.topbar{
     display:flex; align-items:center; justify-content:space-between;
-    padding: 16px 28px;
+    padding: 18px 28px;
     border-bottom: 1px solid var(--border);
-    background: rgba(11,12,22,0.55);
+    background: rgba(10,14,20,0.6);
     position: sticky; top:0; z-index:10;
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(6px);
   }
   .brand{ display:flex; align-items:center; gap:10px; }
-  .brand .dot{ width:10px; height:10px; border-radius:50%; background: linear-gradient(135deg, var(--gold), var(--pink)); box-shadow:0 0 14px var(--gold); }
-  .brand span{ font-family:'Space Grotesk', monospace; letter-spacing:4px; font-weight:700; font-size:13px; color: var(--text); }
+  .brand .dot{ width:9px; height:9px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px var(--gold); }
+  .brand span{ font-family:'JetBrains Mono', monospace; letter-spacing:3px; font-weight:700; font-size:13px; color: var(--text-dim); }
   .user-chip{ display:flex; align-items:center; gap:10px; }
   .user-chip img{ width:32px; height:32px; border-radius:50%; border:1px solid var(--border); object-fit:cover; }
   .user-chip .name{ font-size:13px; color:var(--text-dim); }
   button.ghost{
-    background:rgba(255,255,255,0.03); border:1px solid var(--border); color:var(--text-dim);
-    padding:7px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-family:'Space Grotesk',monospace;
+    background:transparent; border:1px solid var(--border); color:var(--text-dim);
+    padding:7px 12px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'JetBrains Mono',monospace;
     transition: all .15s;
   }
   button.ghost:hover{ border-color: var(--danger); color: var(--danger); }
   button.ghost.accent:hover{ border-color: var(--gold); color: var(--gold); }
 
-  #login-view{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
+  /* ---------- Login view ---------- */
+  #login-view{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
   .status-window{
     width:100%; max-width:380px;
-    background: linear-gradient(180deg, var(--panel-2), var(--panel-solid));
+    background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px 32px;
+    border-radius: 10px;
+    padding: 36px 30px;
     text-align:center;
-    box-shadow: 0 0 0 1px rgba(139,92,246,0.08), 0 30px 80px rgba(0,0,0,0.55);
+    box-shadow: 0 0 0 1px rgba(232,179,61,0.05), 0 20px 60px rgba(0,0,0,0.5);
     position:relative;
     overflow:hidden;
   }
   .status-window::before{
-    content:''; position:absolute; inset:0; height:3px; top:0;
-    background: linear-gradient(90deg, transparent, var(--gold), var(--pink), transparent);
+    content:''; position:absolute; inset:0; height:2px; top:0;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
   }
   .status-window h1{
-    font-family:'Space Grotesk', monospace; letter-spacing:5px; font-size:24px; font-weight:700;
-    background: linear-gradient(90deg, var(--gold), var(--pink));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-    margin-bottom:8px; text-transform:uppercase;
+    font-family:'JetBrains Mono', monospace; letter-spacing:4px; font-size:22px; font-weight:800;
+    color:var(--gold); margin-bottom:6px; text-transform:uppercase;
   }
-  .status-window p.sub{ color:var(--text-dim); font-size:13px; margin-bottom:30px; line-height:1.6; }
+  .status-window p.sub{ color:var(--text-dim); font-size:13px; margin-bottom:28px; line-height:1.5; }
   .google-btn{
     display:flex; align-items:center; justify-content:center; gap:10px;
-    width:100%; padding:13px 16px; border-radius:14px; border:1px solid var(--border);
+    width:100%; padding:12px 16px; border-radius:7px; border:1px solid var(--border);
     background: var(--panel-2); color:var(--text); font-weight:600; font-size:14px; cursor:pointer;
     transition: all .15s;
   }
-  .google-btn:hover{ border-color: var(--gold); box-shadow: 0 0 0 1px rgba(139,92,246,0.25); transform: translateY(-1px); }
+  .google-btn:hover{ border-color: var(--cyan); box-shadow: 0 0 0 1px rgba(79,209,255,0.2); }
   .google-btn svg{ width:18px; height:18px; }
   #login-error{ color: var(--danger); font-size:12px; margin-top:14px; }
 
+  /* ---------- Dashboard ---------- */
   main{ flex:1; width:100%; max-width:1040px; margin:0 auto; padding: 28px 20px 60px; }
   .grid{ display:grid; grid-template-columns: 340px 1fr; gap:22px; align-items:start; }
   @media (max-width: 800px){ .grid{ grid-template-columns: 1fr; } }
 
   .panel{
-    background: linear-gradient(180deg, rgba(27,28,51,0.7), rgba(20,21,38,0.7));
+    background: var(--panel);
     border:1px solid var(--border);
-    border-radius:18px;
+    border-radius:10px;
     padding:22px;
-    backdrop-filter: blur(10px);
   }
   .panel h2{
-    font-family:'Space Grotesk', monospace; font-size:11px; letter-spacing:3px; text-transform:uppercase;
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:3px; text-transform:uppercase;
     color: var(--text-dim); margin-bottom:16px; display:flex; align-items:center; gap:8px;
   }
-  .panel h2::before{ content:''; width:14px; height:2px; border-radius:2px; background: linear-gradient(90deg,var(--gold),var(--pink)); }
+  .panel h2::before{ content:''; width:14px; height:1px; background:var(--gold-dim); }
 
+  /* status card */
   .status-card{ text-align:center; overflow:hidden; padding-top:0; }
   .status-banner{
-    height:100px; margin:0 -22px 0 -22px;
-    background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(34,211,238,0.14));
+    height:92px; margin:0 -22px 0 -22px;
+    background: linear-gradient(135deg, rgba(232,179,61,0.18), rgba(79,209,255,0.10));
     background-size: cover; background-position:center;
     position:relative;
   }
   .status-banner::after{
     content:''; position:absolute; inset:0;
-    background: linear-gradient(180deg, rgba(11,12,22,0) 35%, var(--panel-solid) 100%);
+    background: linear-gradient(180deg, rgba(10,14,20,0) 40%, var(--panel) 100%);
   }
   .avatar-ring{
-    width:90px; height:90px; border-radius:50%; margin:-50px auto 14px;
+    width:88px; height:88px; border-radius:50%; margin:-48px auto 14px;
     padding:3px; background: conic-gradient(var(--gold) var(--pct,0%), var(--border) 0);
     transition: background 0.6s ease; position:relative; z-index:2;
   }
-  .avatar-ring img{ width:100%; height:100%; border-radius:50%; display:block; border:3px solid var(--panel-solid); object-fit:cover; }
+  .avatar-ring img{ width:100%; height:100%; border-radius:50%; display:block; border:3px solid var(--panel); object-fit:cover; }
   .status-card .name{ font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:6px; }
   .level-block{ margin-top:18px; }
-  .level-num{ font-family:'Space Grotesk',monospace; font-size:46px; font-weight:700;
-    background: linear-gradient(180deg, var(--gold), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;
-    line-height:1; }
-  .level-label{ font-size:10px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-top:4px; }
+  .level-num{ font-family:'JetBrains Mono',monospace; font-size:44px; font-weight:800; color:var(--gold); line-height:1; }
+  .level-label{ font-size:10px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-top:2px; }
   .xp-bar-outer{
-    margin-top:16px; height:10px; border-radius:6px; background:var(--panel-2); border:1px solid var(--border); overflow:hidden;
+    margin-top:16px; height:10px; border-radius:5px; background:var(--panel-2); border:1px solid var(--border); overflow:hidden;
   }
   .xp-bar-inner{
-    height:100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--pink));
+    height:100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold));
     width:0%; transition: width .6s ease;
   }
-  .xp-text{ margin-top:8px; font-family:'Space Grotesk',monospace; font-size:11px; color:var(--text-dim); }
+  .xp-text{ margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); }
 
   .personalize-btn{ margin-top:16px; width:100%; }
 
-  .level-up-flash{ animation: flash 1s ease; }
+  .level-up-flash{
+    animation: flash 1s ease;
+  }
   @keyframes flash{
-    0%{ box-shadow: 0 0 0 0 rgba(139,92,246,0.8); }
-    40%{ box-shadow: 0 0 46px 10px rgba(139,92,246,0.5); }
-    100%{ box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+    0%{ box-shadow: 0 0 0 0 rgba(232,179,61,0.8); }
+    40%{ box-shadow: 0 0 40px 8px rgba(232,179,61,0.5); }
+    100%{ box-shadow: 0 0 0 0 rgba(232,179,61,0); }
   }
 
+  /* music note */
   .note-btn{
     width:22px; height:22px; border-radius:50%; border:1px solid var(--border); background:var(--panel-2);
     color:var(--text-dim); font-size:11px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
     flex-shrink:0; transition: all .15s;
   }
   .note-btn:hover{ border-color:var(--gold); color:var(--gold); }
-  .note-btn.active{ background: rgba(139,92,246,0.18); border-color:var(--gold); color:var(--gold); animation: pulse-note 1.6s ease-in-out infinite; }
+  .note-btn.active{ background: rgba(232,179,61,0.15); border-color:var(--gold); color:var(--gold); animation: pulse-note 1.6s ease-in-out infinite; }
   @keyframes pulse-note{
-    0%, 100%{ box-shadow: 0 0 0 0 rgba(139,92,246,0.45); }
-    50%{ box-shadow: 0 0 0 5px rgba(139,92,246,0); }
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(232,179,61,0.45); }
+    50%{ box-shadow: 0 0 0 5px rgba(232,179,61,0); }
   }
 
+  /* quest log */
   .quest-item{
     display:flex; align-items:center; gap:12px;
-    padding:12px 6px; border-bottom:1px solid var(--border);
+    padding:12px 4px; border-bottom:1px solid var(--border);
   }
   .quest-item:last-child{ border-bottom:none; }
   .quest-check{
-    width:22px; height:22px; border-radius:7px; border:1px solid var(--border);
+    width:22px; height:22px; border-radius:5px; border:1px solid var(--border);
     background:var(--panel-2); cursor:pointer; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--ok);
     transition: all .15s;
   }
   .quest-check:hover{ border-color:var(--ok); }
-  .quest-check.done{ background: rgba(52,211,153,0.15); border-color:var(--ok); }
+  .quest-check.done{ background: rgba(62,207,142,0.12); border-color:var(--ok); }
   .quest-title{ flex:1; font-size:14px; }
   .quest-item.done .quest-title{ color:var(--text-dim); text-decoration: line-through; }
-  .quest-xp{ font-family:'Space Grotesk',monospace; font-size:12px; color:var(--gold); }
+  .quest-xp{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--gold); }
   .quest-del{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; }
   .quest-del:hover{ color:var(--danger); }
   .empty-note{ color:var(--text-dim); font-size:13px; padding:10px 4px; }
 
   .add-quest-form{ display:flex; gap:8px; margin-top:14px; }
   .add-quest-form input{
-    background:var(--panel-2); border:1px solid var(--border); border-radius:10px; color:var(--text);
-    padding:9px 12px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:9px 10px; font-size:13px; font-family:'Inter',sans-serif;
   }
   .add-quest-form input[name="title"]{ flex:1; }
   .add-quest-form input[name="xp"]{ width:70px; }
   .add-quest-form button{
-    background: linear-gradient(135deg,var(--gold),var(--pink)); color:#fff; border:none; border-radius:10px; padding:9px 16px;
+    background: var(--gold); color:#1a1204; border:none; border-radius:6px; padding:9px 14px;
     font-weight:700; font-size:13px; cursor:pointer;
   }
-  .add-quest-form button:hover{ filter:brightness(1.1); }
+  .add-quest-form button:hover{ background:#f2c159; }
 
+  /* guild / friends */
   .guild-row{
     display:flex; align-items:center; gap:12px; padding:16px 12px; min-height:58px; border-bottom:1px solid var(--border);
-    border-radius:12px; background-size:cover; background-position:center; position:relative;
+    border-radius:8px; background-size:cover; background-position:center; position:relative;
   }
   .guild-row:last-child{ border-bottom:none; }
   .guild-row img{ width:36px; height:36px; border-radius:50%; border:1px solid var(--border); object-fit:cover; }
-  .guild-row.me{ box-shadow: inset 0 0 0 1px rgba(139,92,246,0.4); }
+  .guild-row.me{ box-shadow: inset 0 0 0 1px rgba(232,179,61,0.35); }
   .guild-info{ flex:1; min-width:0; }
   .guild-info .gname{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
-  .guild-info .gname .you-tag{ color:var(--gold); font-size:10px; font-family:'Space Grotesk',monospace; margin-left:2px; }
+  .guild-info .gname .you-tag{ color:var(--gold); font-size:10px; font-family:'JetBrains Mono',monospace; margin-left:2px; }
   .mini-bar-outer{ height:5px; border-radius:3px; background:var(--panel-2); margin-top:5px; overflow:hidden; }
-  .mini-bar-inner{ height:100%; background: linear-gradient(90deg,var(--gold),var(--pink)); }
-  .guild-level{ font-family:'Space Grotesk',monospace; font-weight:700; color:var(--text-dim); font-size:13px; text-align:right; min-width:44px; }
-  .rank-num{ font-family:'Space Grotesk',monospace; color:var(--text-dim); font-size:12px; width:16px; text-align:center; }
+  .mini-bar-inner{ height:100%; background:var(--gold); }
+  .guild-level{ font-family:'JetBrains Mono',monospace; font-weight:800; color:var(--text-dim); font-size:13px; text-align:right; min-width:44px; }
+  .rank-num{ font-family:'JetBrains Mono',monospace; color:var(--text-dim); font-size:12px; width:16px; text-align:center; }
   .guild-rows-wrap{ display:flex; flex-direction:column; }
 
   #toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:var(--panel-solid); border:1px solid var(--gold); color:var(--gold);
-    padding:11px 20px; border-radius:14px; font-family:'Space Grotesk',monospace; font-size:12px;
+    background:var(--panel); border:1px solid var(--gold); color:var(--gold);
+    padding:10px 18px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px;
     opacity:0; pointer-events:none; transition: opacity .3s, transform .3s; z-index:50;
   }
   #toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
 
+  /* ---------- Profile edit modal ---------- */
   .modal-overlay{
-    position:fixed; inset:0; background:rgba(6,7,14,0.78); backdrop-filter: blur(4px);
+    position:fixed; inset:0; background:rgba(6,8,12,0.72); backdrop-filter: blur(3px);
     display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;
   }
   .modal-box{
-    width:100%; max-width:420px; background: linear-gradient(180deg, var(--panel-2), var(--panel-solid)); border:1px solid var(--border);
-    border-radius:18px; padding:24px; position:relative;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+    width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border);
+    border-radius:10px; padding:24px; position:relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     max-height: 90vh; overflow-y: auto;
   }
   .modal-box h3{
-    font-family:'Space Grotesk',monospace; font-size:13px; letter-spacing:2px; text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:2px; text-transform:uppercase;
     color:var(--gold); margin-bottom:4px;
   }
   .modal-box .modal-sub{ color:var(--text-dim); font-size:12px; margin-bottom:20px; }
   .field{ margin-bottom:16px; }
-  .field label{ display:block; font-size:11px; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; margin-bottom:6px; font-family:'Space Grotesk',monospace; }
+  .field label{ display:block; font-size:11px; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
   .field input{
-    width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:10px; color:var(--text);
-    padding:10px 12px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif;
+    width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:10px 12px; font-size:13px; font-family:'Inter',sans-serif;
   }
   .field input:focus{ outline:none; border-color:var(--cyan); }
   .field .hint{ font-size:11px; color:var(--text-dim); margin-top:5px; }
   .modal-preview-banner{
-    height:74px; border-radius:12px; margin-bottom:6px; background-size:cover; background-position:center;
-    background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.12));
+    height:70px; border-radius:7px; margin-bottom:6px; background-size:cover; background-position:center;
+    background: linear-gradient(135deg, rgba(232,179,61,0.18), rgba(79,209,255,0.10));
     border:1px solid var(--border);
     touch-action:none; user-select:none;
   }
   .modal-preview-banner.draggable{ cursor:grab; }
   .modal-preview-banner.draggable:active{ cursor:grabbing; }
-  .banner-drag-hint{ font-size:11px; color:var(--text-dim); margin-bottom:16px; display:none; }
+  .banner-drag-hint{
+    font-size:11px; color:var(--text-dim); margin-bottom:16px; display:none;
+  }
   .banner-drag-hint.show{ display:block; }
   .modal-actions{ display:flex; gap:10px; margin-top:20px; }
   .modal-actions button{
-    flex:1; padding:12px; border-radius:12px; font-weight:700; font-size:13px; cursor:pointer; border:1px solid var(--border);
+    flex:1; padding:11px; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; border:1px solid var(--border);
   }
-  .modal-actions .btn-save{ background: linear-gradient(135deg,var(--gold),var(--pink)); color:#fff; border:none; }
-  .modal-actions .btn-save:hover{ filter:brightness(1.1); }
+  .modal-actions .btn-save{ background:var(--gold); color:#1a1204; border:none; }
+  .modal-actions .btn-save:hover{ background:#f2c159; }
   .modal-actions .btn-cancel{ background:transparent; color:var(--text-dim); }
   .modal-actions .btn-cancel:hover{ color:var(--text); border-color:var(--text-dim); }
   .modal-close{ position:absolute; top:14px; right:16px; background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; }
   .modal-close:hover{ color:var(--danger); }
 
+  /* ---------- Color picker (tema do site) ---------- */
   .color-picker{ margin-top:2px; }
   .sv-box{
-    position:relative; width:100%; height:150px; border-radius:12px; border:1px solid var(--border);
+    position:relative; width:100%; height:150px; border-radius:8px; border:1px solid var(--border);
     cursor:crosshair; touch-action:none; overflow:hidden;
   }
   .sv-box::before{ content:''; position:absolute; inset:0; background:linear-gradient(to right, #fff, rgba(255,255,255,0)); }
@@ -279,7 +284,7 @@
     transform:translate(-50%,-50%); pointer-events:none; z-index:2;
   }
   .hue-slider{
-    position:relative; width:100%; height:14px; border-radius:8px; margin-top:14px; cursor:pointer; touch-action:none;
+    position:relative; width:100%; height:14px; border-radius:7px; margin-top:14px; cursor:pointer; touch-action:none;
     background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
   }
   .hue-thumb{
@@ -289,36 +294,45 @@
   }
   .hex-row{
     display:flex; align-items:center; gap:10px; margin-top:14px;
-    background:var(--panel-2); border:1px solid var(--border); border-radius:12px; padding:8px 12px;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:8px 12px;
   }
   .color-swatch{ width:22px; height:22px; border-radius:50%; border:1px solid var(--border); flex-shrink:0; }
-  .hex-hash{ color:var(--text-dim); font-family:'Space Grotesk',monospace; font-weight:700; }
+  .hex-hash{ color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-weight:700; }
   .hex-row input{
     flex:1; min-width:0; background:transparent; border:none; color:var(--text);
-    font-family:'Space Grotesk',monospace; font-weight:700; font-size:14px; letter-spacing:1px;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; letter-spacing:1px;
     text-transform:uppercase;
   }
   .hex-row input:focus{ outline:none; }
-  .icon-btn{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; padding:4px; }
+  .icon-btn{
+    background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; padding:4px;
+  }
   .icon-btn:hover{ color:var(--cyan); }
 
+  /* ---------- Streak ---------- */
   .streak-chip{
     display:none; align-items:center; justify-content:center; gap:6px;
-    margin-top:10px; font-family:'Space Grotesk',monospace; font-size:12px;
-    color: var(--gold); background: rgba(139,92,246,0.12); border:1px solid var(--border);
-    padding:5px 12px; border-radius:20px;
+    margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:12px;
+    color: var(--gold); background: rgba(232,179,61,0.10); border:1px solid var(--border);
+    padding:5px 10px; border-radius:20px;
   }
   .streak-chip.show{ display:inline-flex; }
 
-  .achievements-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-top:4px; }
-  .achievements-grid.compact{ grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap:9px; }
+  /* ---------- Conquistas ---------- */
+  .achievements-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px;
+    margin-top:4px;
+  }
+  .achievements-grid.compact{
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap:9px;
+  }
   .ach-card{
-    background: var(--panel-2); border:1px solid var(--border); border-radius:12px;
+    background: var(--panel-2); border:1px solid var(--border); border-radius:9px;
     padding:14px 12px; text-align:center; position:relative; transition: border-color .15s;
   }
-  .achievements-grid.compact .ach-card{ padding:10px 8px; border-radius:10px; }
-  .ach-card.unlocked{ border-color: var(--gold); box-shadow: 0 0 0 1px rgba(139,92,246,0.2); }
-  .ach-card.locked{ opacity:0.5; }
+  .achievements-grid.compact .ach-card{ padding:10px 8px; border-radius:8px; }
+  .ach-card.unlocked{ border-color: var(--gold); box-shadow: 0 0 0 1px rgba(232,179,61,0.15); }
+  .ach-card.locked{ opacity:0.55; }
   .ach-icon{ font-size:26px; line-height:1; margin-bottom:8px; }
   .achievements-grid.compact .ach-icon{ font-size:19px; margin-bottom:5px; }
   .ach-title{ font-size:12px; font-weight:700; letter-spacing:0.5px; }
@@ -327,50 +341,57 @@
   .achievements-grid.compact .ach-desc{ font-size:9.5px; margin-top:3px; }
   .ach-mystery .ach-title, .ach-mystery .ach-desc{ color: var(--text-dim); }
 
+  /* ---------- Coluna direita (guilda/conquistas) ---------- */
   #right-column{ display:flex; flex-direction:column; gap:22px; min-height:100%; }
   #side-default{ display:flex; flex-direction:column; gap:22px; }
   #achievements-panel-box{ flex:1; display:flex; flex-direction:column; }
 
+  /* ---------- Admin ---------- */
   .admin-link{ display:none; }
   .admin-link.show{ display:inline-block; }
   #admin-view{ flex:1; width:100%; max-width:760px; margin:0 auto; padding: 28px 20px 60px; }
   .admin-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
-  .admin-header h1{ font-family:'Space Grotesk',monospace; font-size:16px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
+  .admin-header h1{ font-family:'JetBrains Mono',monospace; font-size:16px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
   .admin-form{ display:flex; flex-direction:column; gap:14px; margin-bottom:26px; }
   .admin-form .row{ display:flex; gap:12px; }
   .admin-form .row .field{ flex:1; margin-bottom:0; }
   .admin-form select{
-    width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:10px; color:var(--text);
-    padding:10px 12px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif;
+    width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:10px 12px; font-size:13px; font-family:'Inter',sans-serif;
   }
   .admin-form .checkbox-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); }
   .admin-form .checkbox-row input{ width:auto; }
-  .admin-form button.btn-save{ align-self:flex-start; padding:11px 22px; border-radius:12px; border:none; background: linear-gradient(135deg,var(--gold),var(--pink)); color:#fff; font-weight:700; cursor:pointer; }
-  .admin-form button.btn-save:hover{ filter:brightness(1.1); }
+  .admin-form button.btn-save{ align-self:flex-start; padding:10px 20px; border-radius:7px; border:none; background:var(--gold); color:#1a1204; font-weight:700; cursor:pointer; }
+  .admin-form button.btn-save:hover{ background:#f2c159; }
   .admin-list{ display:flex; flex-direction:column; gap:10px; }
   .admin-item{
-    display:flex; align-items:center; gap:12px; background: var(--panel-solid); border:1px solid var(--border);
-    border-radius:12px; padding:12px 14px;
+    display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
+    border-radius:8px; padding:12px 14px;
   }
   .admin-item .aicon{ font-size:20px; }
   .admin-item .ainfo{ flex:1; min-width:0; }
   .admin-item .ainfo .atitle{ font-size:13px; font-weight:700; }
-  .admin-item .ainfo .ameta{ font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'Space Grotesk',monospace; }
+  .admin-item .ainfo .ameta{ font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'JetBrains Mono',monospace; }
   .admin-item .adel{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; }
   .admin-item .adel:hover{ color:var(--danger); }
 
-  #animated-bg-layer{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  /* ---------- Fundo animado ---------- */
+  #animated-bg-layer{
+    position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
+  }
   #animated-bg-layer canvas{ width:100%; height:100%; display:block; }
 
-  .bgstyle-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap:8px; }
+  .bgstyle-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap:8px;
+  }
   .bgstyle-opt{
     display:flex; flex-direction:column; align-items:center; gap:6px;
-    background:var(--panel-2); border:1px solid var(--border); border-radius:12px;
-    padding:12px 6px; cursor:pointer; color:var(--text-dim); font-size:11px; font-family:'Plus Jakarta Sans',sans-serif;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:8px;
+    padding:12px 6px; cursor:pointer; color:var(--text-dim); font-size:11px; font-family:'Inter',sans-serif;
     transition: all .15s;
   }
   .bgstyle-opt:hover{ border-color:var(--cyan); color:var(--text); }
-  .bgstyle-opt.selected{ border-color:var(--gold); color:var(--gold); background:rgba(139,92,246,0.1); }
+  .bgstyle-opt.selected{ border-color:var(--gold); color:var(--gold); background:rgba(232,179,61,0.08); }
   .bgstyle-opt .bgstyle-icon{ font-size:20px; line-height:1; }
 </style>
 </head>
@@ -407,6 +428,7 @@
 
     <main>
       <div class="grid">
+        <!-- LEFT: status + quests -->
         <div style="display:flex; flex-direction:column; gap:22px;">
           <div class="panel status-card" id="status-card">
             <div class="status-banner" id="status-banner"></div>
@@ -436,6 +458,7 @@
           </div>
         </div>
 
+        <!-- RIGHT: guild + conquistas -->
         <div id="right-column">
           <div id="side-default">
             <div class="panel">
@@ -452,7 +475,7 @@
     </main>
   </div>
 
-  <!-- ADMIN VIEW -->
+  <!-- ADMIN VIEW (só visível para o e-mail definido em ADMIN_EMAIL) -->
   <div id="admin-view" class="hidden">
     <div class="admin-header">
       <h1>Admin · Conquistas</h1>
@@ -556,7 +579,7 @@
     </div>
   </div>
 
-  <!-- VIEW PROFILE MODAL -->
+  <!-- VIEW PROFILE MODAL (perfil de qualquer pessoa) -->
   <div id="view-profile-modal" class="modal-overlay hidden">
     <div class="modal-box">
       <button class="modal-close" id="close-view-profile-btn" type="button">×</button>
@@ -578,7 +601,7 @@
         </div>
       </div>
       <div style="margin-top:22px;">
-        <h2 style="font-family:'Space Grotesk',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Conquistas</h2>
+        <h2 style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Conquistas</h2>
         <div class="achievements-grid compact" id="view-profile-achievements"></div>
       </div>
       <div class="modal-actions" id="view-profile-edit-actions" style="display:none;">
@@ -601,27 +624,33 @@
     query, orderBy, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD6ny4iENhYyVg8PwIfCS5QA9KAPt6QxC0",
-    authDomain: "sistema-e90e8.firebaseapp.com",
-    projectId: "sistema-e90e8",
-    storageBucket: "sistema-e90e8.firebasestorage.app",
-    messagingSenderId: "898058892076",
-    appId: "1:898058892076:web:105ecf229f9dc47fd37289",
-    measurementId: "G-VZ0RQ4S4LC"
-  };
+  // ======= SUBSTITUA pelo config do SEU projeto Firebase =======
+const firebaseConfig = {
+  apiKey: "AIzaSyD6ny4iENhYyVg8PwIfCS5QA9KAPt6QxC0",
+  authDomain: "sistema-e90e8.firebaseapp.com",
+  projectId: "sistema-e90e8",
+  storageBucket: "sistema-e90e8.firebasestorage.app",
+  messagingSenderId: "898058892076",
+  appId: "1:898058892076:web:105ecf229f9dc47fd37289",
+  measurementId: "G-VZ0RQ4S4LC"
+};
+  // ================================================================
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
-  const XP_PER_LEVEL = 100;
-  const DEFAULT_GOLD = '#8B5CF6';
-  const DEFAULT_GOLD_DIM = '#6D3FE0';
-  const DEFAULT_BORDER = '#2a2c48';
+  const XP_PER_LEVEL = 100; // XP necessário para cada nível (fixo e simples)
+  const DEFAULT_GOLD = '#E8B33D';
+  const DEFAULT_GOLD_DIM = '#A67F2C';
+  const DEFAULT_BORDER = '#1f2a38';
 
+  // ======= TROQUE pelo e-mail da SUA conta Google =======
+  // Só quem estiver logado com este e-mail vê o botão "Admin" e consegue
+  // acessar a rota #admin para criar/editar conquistas.
   const ADMIN_EMAIL = 'harlley21qq@gmail.com';
+  // =======================================================
 
   let currentUid = null;
   let isAdmin = false;
@@ -629,16 +658,22 @@
   let guildUnsub = null;
   let achievementsUnsub = null;
   let lastKnownLevel = 1;
-  let myProfile = {};
-  let achievementDefs = [];
-  let currentQuestsSnapshot = null;
+  let myProfile = {};       // último snapshot dos dados do próprio usuário
+  let achievementDefs = []; // último snapshot da coleção global "achievements"
+  let currentQuestsSnapshot = null; // último snapshot das quests, usado para checar "dia perfeito"
 
+  // avatar padrão (SVG embutido) usado quando um link de foto falha ao carregar
   window.__FALLBACK_AVATAR = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88"><rect width="88" height="88" fill="#1b1c33"/><circle cx="44" cy="33" r="15" fill="#2a2c48"/><rect x="16" y="55" width="56" height="26" rx="13" fill="#2a2c48"/></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88"><rect width="88" height="88" fill="#141c28"/><circle cx="44" cy="33" r="15" fill="#2a3646"/><rect x="16" y="55" width="56" height="26" rx="13" fill="#2a3646"/></svg>'
   );
 
-  function todayStr(){ return new Date().toISOString().slice(0,10); }
-  function levelFromXp(xp){ return Math.floor(xp / XP_PER_LEVEL) + 1; }
+  function todayStr(){
+    return new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  }
+
+  function levelFromXp(xp){
+    return Math.floor(xp / XP_PER_LEVEL) + 1;
+  }
 
   function showToast(msg){
     const t = document.getElementById('toast');
@@ -647,13 +682,16 @@
     setTimeout(()=> t.classList.remove('show'), 2200);
   }
 
+  // Extrai o ID de um vídeo do YouTube a partir de vários formatos de link
   function extractYouTubeId(url){
     if(!url) return null;
     const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     return match ? match[1] : null;
   }
 
-  const _bgCache = new Map();
+  // Aplica um background-image só depois de confirmar que a URL carrega de fato
+  // (evita banner quebrado quando o link não é o arquivo direto da imagem)
+  const _bgCache = new Map(); // url -> 'ok' | 'fail'
   function safeSetBackground(el, url, overlay, posX, posY){
     const finalImg = overlay ? `${overlay}, url("${url}")` : `url("${url}")`;
     const applyPos = () => {
@@ -672,6 +710,7 @@
     img.src = url;
   }
 
+  // ---------- FUNDO ANIMADO DO SITE (gerado em canvas, sem links externos) ----------
   const BG_STYLE_OPTIONS = [
     { key: 'none', icon: '✖', label: 'Nenhum' },
     { key: 'embers', icon: '✨', label: 'Brasas' },
@@ -714,9 +753,12 @@
   function initEmbers(){
     const { width, height } = bgCanvas;
     bgParticles = Array.from({ length: 60 }, () => ({
-      x: Math.random() * width, y: Math.random() * height,
-      r: Math.random() * 2 + 0.6, speed: Math.random() * 0.5 + 0.15,
-      phase: Math.random() * Math.PI * 2, alpha: Math.random() * 0.5 + 0.2
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 2 + 0.6,
+      speed: Math.random() * 0.5 + 0.15,
+      phase: Math.random() * Math.PI * 2,
+      alpha: Math.random() * 0.5 + 0.2
     }));
   }
   function drawEmbers(){
@@ -724,18 +766,24 @@
     bgCtx.clearRect(0, 0, width, height);
     const c = currentThemeRgb();
     bgParticles.forEach((p) => {
-      p.y -= p.speed; p.phase += 0.01; p.x += Math.sin(p.phase) * 0.3;
+      p.y -= p.speed;
+      p.phase += 0.01;
+      p.x += Math.sin(p.phase) * 0.3;
       if(p.y < -10){ p.y = height + 10; p.x = Math.random() * width; }
-      bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${p.alpha})`; bgCtx.fill();
+      bgCtx.beginPath();
+      bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${p.alpha})`;
+      bgCtx.fill();
     });
   }
 
   function initConstellation(){
     const { width, height } = bgCanvas;
     bgParticles = Array.from({ length: 46 }, () => ({
-      x: Math.random() * width, y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25
     }));
   }
   function drawConstellation(){
@@ -749,16 +797,21 @@
     });
     for(let i = 0; i < bgParticles.length; i++){
       const a = bgParticles[i];
-      bgCtx.beginPath(); bgCtx.arc(a.x, a.y, 1.4, 0, Math.PI * 2);
-      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.55)`; bgCtx.fill();
+      bgCtx.beginPath();
+      bgCtx.arc(a.x, a.y, 1.4, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.55)`;
+      bgCtx.fill();
       for(let j = i + 1; j < bgParticles.length; j++){
         const b = bgParticles[j];
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if(dist < 130){
-          bgCtx.beginPath(); bgCtx.moveTo(a.x, a.y); bgCtx.lineTo(b.x, b.y);
+          bgCtx.beginPath();
+          bgCtx.moveTo(a.x, a.y);
+          bgCtx.lineTo(b.x, b.y);
           bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${0.18 * (1 - dist / 130)})`;
-          bgCtx.lineWidth = 1; bgCtx.stroke();
+          bgCtx.lineWidth = 1;
+          bgCtx.stroke();
         }
       }
     }
@@ -775,13 +828,16 @@
       { amp: 18, freq: 0.012, speed: 1.5, y: height * 0.90, alpha: 0.06 }
     ];
     layers.forEach((L) => {
-      bgCtx.beginPath(); bgCtx.moveTo(0, height);
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, height);
       for(let x = 0; x <= width; x += 8){
         const y = L.y + Math.sin(x * L.freq + waveT * L.speed * 10) * L.amp;
         bgCtx.lineTo(x, y);
       }
-      bgCtx.lineTo(width, height); bgCtx.closePath();
-      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${L.alpha})`; bgCtx.fill();
+      bgCtx.lineTo(width, height);
+      bgCtx.closePath();
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${L.alpha})`;
+      bgCtx.fill();
     });
   }
 
@@ -792,24 +848,34 @@
     gridT += 0.6;
     const horizon = height * 0.55;
     const spacing = 46;
+
     for(let i = 0; i < 18; i++){
       const t = ((i * spacing + gridT) % (spacing * 18)) / (spacing * 18);
       const y = horizon + t * t * (height - horizon);
       const alpha = 0.22 * (1 - t);
-      bgCtx.beginPath(); bgCtx.moveTo(0, y); bgCtx.lineTo(width, y);
-      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${alpha})`; bgCtx.lineWidth = 1; bgCtx.stroke();
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y);
+      bgCtx.lineTo(width, y);
+      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${alpha})`;
+      bgCtx.lineWidth = 1;
+      bgCtx.stroke();
     }
     const vanishX = width / 2;
     for(let i = -10; i <= 10; i++){
       const xBase = vanishX + i * 70;
-      bgCtx.beginPath(); bgCtx.moveTo(vanishX, horizon); bgCtx.lineTo(xBase, height);
-      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.12)`; bgCtx.lineWidth = 1; bgCtx.stroke();
+      bgCtx.beginPath();
+      bgCtx.moveTo(vanishX, horizon);
+      bgCtx.lineTo(xBase, height);
+      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.12)`;
+      bgCtx.lineWidth = 1;
+      bgCtx.stroke();
     }
     const grad = bgCtx.createLinearGradient(0, horizon - 40, 0, horizon + 40);
     grad.addColorStop(0, `rgba(${c.r},${c.g},${c.b},0)`);
     grad.addColorStop(0.5, `rgba(${c.r},${c.g},${c.b},0.15)`);
     grad.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
-    bgCtx.fillStyle = grad; bgCtx.fillRect(0, horizon - 40, width, 80);
+    bgCtx.fillStyle = grad;
+    bgCtx.fillRect(0, horizon - 40, width, 80);
   }
 
   function initMatrix(){
@@ -821,22 +887,32 @@
   function drawMatrix(){
     const { width, height } = bgCanvas;
     const c = currentThemeRgb();
-    bgCtx.fillStyle = 'rgba(11,12,22,0.15)'; bgCtx.fillRect(0, 0, width, height);
+    bgCtx.fillStyle = 'rgba(10,14,20,0.15)';
+    bgCtx.fillRect(0, 0, width, height);
     bgCtx.font = '14px monospace';
     const chars = '01ｱｲｳｴｵｶｷｸｹｺ';
     bgMatrixDrops.forEach((y, i) => {
-      const x = i * 18; const yPos = y * 18;
+      const x = i * 18;
+      const yPos = y * 18;
       const char = chars[Math.floor(Math.random() * chars.length)];
-      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.55)`; bgCtx.fillText(char, x, yPos);
-      if(yPos > height && Math.random() > 0.975){ bgMatrixDrops[i] = 0; } else { bgMatrixDrops[i] = y + 1; }
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.55)`;
+      bgCtx.fillText(char, x, yPos);
+      if(yPos > height && Math.random() > 0.975){
+        bgMatrixDrops[i] = 0;
+      } else {
+        bgMatrixDrops[i] = y + 1;
+      }
     });
   }
 
   function initNebula(){
     const { width, height } = bgCanvas;
     bgBlobs = Array.from({ length: 5 }, () => ({
-      x: Math.random() * width, y: Math.random() * height,
-      r: Math.random() * 180 + 120, vx: (Math.random() - 0.5) * 0.15, vy: (Math.random() - 0.5) * 0.15,
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 180 + 120,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
       alpha: Math.random() * 0.06 + 0.05
     }));
   }
@@ -851,14 +927,19 @@
       const grad = bgCtx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
       grad.addColorStop(0, `rgba(${c.r},${c.g},${c.b},${b.alpha})`);
       grad.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
-      bgCtx.fillStyle = grad; bgCtx.beginPath(); bgCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); bgCtx.fill();
+      bgCtx.fillStyle = grad;
+      bgCtx.beginPath();
+      bgCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      bgCtx.fill();
     });
   }
 
   function initOrbit(){
     bgOrbitRings = Array.from({ length: 5 }, (_, i) => ({
-      radius: 60 + i * 55, speed: (i % 2 === 0 ? 1 : -1) * (0.15 + Math.random() * 0.1),
-      angle: Math.random() * Math.PI * 2, size: Math.random() * 2.4 + 1.6
+      radius: 60 + i * 55,
+      speed: (i % 2 === 0 ? 1 : -1) * (0.15 + Math.random() * 0.1),
+      angle: Math.random() * Math.PI * 2,
+      size: Math.random() * 2.4 + 1.6
     }));
   }
   function drawOrbit(){
@@ -868,15 +949,24 @@
     const cx = width / 2, cy = height * 0.45;
     bgOrbitRings.forEach((o) => {
       o.angle += o.speed * 0.01;
-      bgCtx.beginPath(); bgCtx.arc(cx, cy, o.radius, 0, Math.PI * 2);
-      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.08)`; bgCtx.lineWidth = 1; bgCtx.stroke();
-      const x = cx + Math.cos(o.angle) * o.radius; const y = cy + Math.sin(o.angle) * o.radius;
-      bgCtx.beginPath(); bgCtx.arc(x, y, o.size, 0, Math.PI * 2);
-      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.6)`; bgCtx.fill();
+      bgCtx.beginPath();
+      bgCtx.arc(cx, cy, o.radius, 0, Math.PI * 2);
+      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.08)`;
+      bgCtx.lineWidth = 1;
+      bgCtx.stroke();
+      const x = cx + Math.cos(o.angle) * o.radius;
+      const y = cy + Math.sin(o.angle) * o.radius;
+      bgCtx.beginPath();
+      bgCtx.arc(x, y, o.size, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.6)`;
+      bgCtx.fill();
     });
   }
 
-  function initRipple(){ bgRipples = []; bgRippleTimer = 0; }
+  function initRipple(){
+    bgRipples = [];
+    bgRippleTimer = 0;
+  }
   function drawRipple(){
     const { width, height } = bgCanvas;
     bgCtx.clearRect(0, 0, width, height);
@@ -887,9 +977,13 @@
       bgRipples.push({ x: Math.random() * width, y: Math.random() * height, r: 0, alpha: 0.35 });
     }
     bgRipples.forEach((rp) => {
-      rp.r += 1.2; rp.alpha *= 0.985;
-      bgCtx.beginPath(); bgCtx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
-      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${rp.alpha})`; bgCtx.lineWidth = 1.4; bgCtx.stroke();
+      rp.r += 1.2;
+      rp.alpha *= 0.985;
+      bgCtx.beginPath();
+      bgCtx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+      bgCtx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${rp.alpha})`;
+      bgCtx.lineWidth = 1.4;
+      bgCtx.stroke();
     });
     bgRipples = bgRipples.filter((rp) => rp.alpha > 0.02 && rp.r < Math.max(width, height));
   }
@@ -910,6 +1004,7 @@
     style = style || 'none';
     if(style === currentBgStyle) return;
     currentBgStyle = style;
+
     if(style === 'none'){
       if(bgAnimId){ cancelAnimationFrame(bgAnimId); bgAnimId = null; }
       if(bgCtx && bgCanvas){ bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height); }
@@ -928,6 +1023,7 @@
   let pickerBgStyle = 'none';
   let originalBgStyle = 'none';
 
+  // ---------- POSIÇÃO DO BANNER (arrastar pra escolher a parte visível) ----------
   let pickerBannerPosX = 50, pickerBannerPosY = 50;
   let originalBannerPos = { x: 50, y: 50 };
   let bannerHasImage = false;
@@ -957,6 +1053,7 @@
     });
   }
 
+  // ---------- MÚSICA (áudio, sem vídeo visível) ----------
   let ytPlayer = null;
   let ytApiReady = false;
   let pendingTrack = null;
@@ -964,7 +1061,11 @@
 
   window.onYouTubeIframeAPIReady = function(){
     ytApiReady = true;
-    if(pendingTrack){ const p = pendingTrack; pendingTrack = null; startTrack(p.uid, p.videoId); }
+    if(pendingTrack){
+      const p = pendingTrack;
+      pendingTrack = null;
+      startTrack(p.uid, p.videoId);
+    }
   };
   (function loadYouTubeApi(){
     const tag = document.createElement('script');
@@ -1002,11 +1103,13 @@
     if(!videoId) return;
     if(currentTrack.uid === uid && currentTrack.videoId === videoId && ytPlayer){
       if(currentTrack.playing){
-        currentTrack.playing = false; updateNoteButtons();
-        try{ ytPlayer.pauseVideo(); }catch(err){}
+        currentTrack.playing = false;
+        updateNoteButtons();
+        try{ ytPlayer.pauseVideo(); }catch(err){ /* player ainda carregando */ }
       } else {
-        currentTrack.playing = true; updateNoteButtons();
-        try{ ytPlayer.playVideo(); }catch(err){}
+        currentTrack.playing = true;
+        updateNoteButtons();
+        try{ ytPlayer.playVideo(); }catch(err){ /* player ainda carregando */ }
       }
       return;
     }
@@ -1027,12 +1130,16 @@
     });
   }
 
+  // ---------- COR DO TEMA (color picker) ----------
   function clamp01(v){ return Math.min(1, Math.max(0, v)); }
 
   function hsvToRgb(h, s, v){
     h = ((h % 360) + 360) % 360 / 60;
-    const i = Math.floor(h); const f = h - i;
-    const p = v * (1 - s); const q = v * (1 - f * s); const t = v * (1 - (1 - f) * s);
+    const i = Math.floor(h);
+    const f = h - i;
+    const p = v * (1 - s);
+    const q = v * (1 - f * s);
+    const t = v * (1 - (1 - f) * s);
     let r, g, b;
     switch(i % 6){
       case 0: r=v; g=t; b=p; break;
@@ -1055,7 +1162,8 @@
         case g: h = (b-r)/d + 2; break;
         default: h = (r-g)/d + 4;
       }
-      h *= 60; if(h < 0) h += 360;
+      h *= 60;
+      if(h < 0) h += 360;
     }
     return { h, s: max===0?0:d/max, v: max };
   }
@@ -1100,7 +1208,7 @@
     document.documentElement.style.setProperty('--border', borderTintFromHex(h));
   }
 
-  let pickerH = 258, pickerS = 0.68, pickerV = 0.93, pickerHex = DEFAULT_GOLD;
+  let pickerH = 42, pickerS = 0.78, pickerV = 0.91, pickerHex = DEFAULT_GOLD;
   let originalTheme = DEFAULT_GOLD;
 
   const svBoxEl = document.getElementById('sv-box');
@@ -1117,7 +1225,9 @@
     svCursorEl.style.background = pickerHex;
     hueThumbEl.style.left = (pickerH/360*100) + '%';
     colorSwatchEl.style.background = pickerHex;
-    if(document.activeElement !== hexInputEl){ hexInputEl.value = pickerHex.replace('#',''); }
+    if(document.activeElement !== hexInputEl){
+      hexInputEl.value = pickerHex.replace('#','');
+    }
   }
 
   function setFromHsv(){
@@ -1130,7 +1240,9 @@
   function initPicker(hex){
     const rgb = hexToRgb(hex) || hexToRgb(DEFAULT_GOLD);
     const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
-    pickerH = hsv.h; pickerS = hsv.s || 0.68; pickerV = hsv.v || 0.93;
+    pickerH = hsv.h;
+    pickerS = hsv.s || 0.78;
+    pickerV = hsv.v || 0.91;
     pickerHex = ('#' + [rgb.r,rgb.g,rgb.b].map(x=>x.toString(16).padStart(2,'0')).join('')).toUpperCase();
     renderPicker();
   }
@@ -1167,23 +1279,35 @@
         const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
         pickerH = hsv.h; pickerS = hsv.s; pickerV = hsv.v;
         pickerHex = '#' + clean;
-        renderPicker(); applyTheme(pickerHex);
+        renderPicker();
+        applyTheme(pickerHex);
       }
     }
   });
 
   document.getElementById('copy-hex-btn').addEventListener('click', async () => {
-    try{ await navigator.clipboard.writeText(pickerHex); showToast('Código copiado'); }
-    catch(err){ showToast(pickerHex); }
+    try{
+      await navigator.clipboard.writeText(pickerHex);
+      showToast('Código copiado');
+    }catch(err){
+      showToast(pickerHex);
+    }
   });
 
+  // ---------- AUTH ----------
   document.getElementById('google-login-btn').addEventListener('click', async () => {
     document.getElementById('login-error').textContent = '';
-    try{ await signInWithPopup(auth, provider); }
-    catch(err){ console.error(err); document.getElementById('login-error').textContent = 'Erro ao entrar: ' + err.message; }
+    try{
+      await signInWithPopup(auth, provider);
+    }catch(err){
+      console.error(err);
+      document.getElementById('login-error').textContent = 'Erro ao entrar: ' + err.message;
+    }
   });
 
-  document.getElementById('logout-btn').addEventListener('click', async () => { await signOut(auth); });
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await signOut(auth);
+  });
 
   onAuthStateChanged(auth, async (user) => {
     if(questsUnsub){ questsUnsub(); questsUnsub = null; }
@@ -1191,7 +1315,8 @@
     if(achievementsUnsub){ achievementsUnsub(); achievementsUnsub = null; }
 
     if(!user){
-      currentUid = null; isAdmin = false;
+      currentUid = null;
+      isAdmin = false;
       setAnimatedBackground('none');
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('hidden');
@@ -1212,13 +1337,28 @@
     const snap = await getDoc(userRef);
     if(!snap.exists()){
       await setDoc(userRef, {
-        name: user.displayName || 'Aventureiro', photoURL: user.photoURL || '',
-        customPhotoURL: '', customName: '', bannerURL: '', bannerPosX: 50, bannerPosY: 50,
-        musicUrl: '', musicVideoId: '', animatedBgStyle: 'none', xp: 0, streak: 0,
-        lastActivityDate: null, totalCompletions: 0, unlockedAchievements: [], createdAt: serverTimestamp()
+        name: user.displayName || 'Aventureiro',
+        photoURL: user.photoURL || '',
+        customPhotoURL: '',
+        customName: '',
+        bannerURL: '',
+        bannerPosX: 50,
+        bannerPosY: 50,
+        musicUrl: '',
+        musicVideoId: '',
+        animatedBgStyle: 'none',
+        xp: 0,
+        streak: 0,
+        lastActivityDate: null,
+        totalCompletions: 0,
+        unlockedAchievements: [],
+        createdAt: serverTimestamp()
       });
     } else {
-      await updateDoc(userRef, { name: user.displayName || 'Aventureiro', photoURL: user.photoURL || '' });
+      await updateDoc(userRef, {
+        name: user.displayName || 'Aventureiro',
+        photoURL: user.photoURL || ''
+      });
     }
 
     onSnapshot(userRef, (docSnap) => {
@@ -1245,7 +1385,9 @@
     });
 
     const guildQuery = query(collection(db, 'users'), orderBy('xp', 'desc'));
-    guildUnsub = onSnapshot(guildQuery, (gsnap) => { renderGuild(gsnap); });
+    guildUnsub = onSnapshot(guildQuery, (gsnap) => {
+      renderGuild(gsnap);
+    });
 
     const achievementsColRef = collection(db, 'achievements');
     achievementsUnsub = onSnapshot(achievementsColRef, (asnap) => {
@@ -1260,6 +1402,7 @@
     renderRoute();
   });
 
+  // ---------- ROTEAMENTO (dashboard vs admin) ----------
   function renderRoute(){
     const wantsAdmin = window.location.hash === '#admin';
     if(wantsAdmin && isAdmin){
@@ -1275,6 +1418,7 @@
   document.getElementById('admin-link-btn').addEventListener('click', () => { window.location.hash = '#admin'; });
   document.getElementById('admin-back-btn').addEventListener('click', () => { window.location.hash = ''; });
 
+  // ---------- STATUS / XP / PERFIL ----------
   function renderStatus(data){
     const xp = data.xp || 0;
     const level = levelFromXp(xp);
@@ -1331,6 +1475,7 @@
     if(currentUid) openProfileView(currentUid, myProfile);
   });
 
+  // ---------- PERSONALIZAR PERFIL ----------
   const personalizeModal = document.getElementById('personalize-modal');
 
   document.getElementById('open-personalize-btn').addEventListener('click', () => {
@@ -1357,7 +1502,9 @@
   }
   document.getElementById('close-personalize-btn').addEventListener('click', closePersonalizeModal);
   document.getElementById('cancel-personalize-btn').addEventListener('click', closePersonalizeModal);
-  personalizeModal.addEventListener('click', (e) => { if(e.target === personalizeModal) closePersonalizeModal(); });
+  personalizeModal.addEventListener('click', (e) => {
+    if(e.target === personalizeModal) closePersonalizeModal();
+  });
 
   let _bannerPreviewTimer = null;
   function updateModalBannerPreview(){
@@ -1412,7 +1559,10 @@
     const musicVideoId = musicUrl ? (extractYouTubeId(musicUrl) || '') : '';
     const animatedBgStyle = pickerBgStyle;
 
-    if(musicUrl && !musicVideoId){ showToast('Link do YouTube inválido'); return; }
+    if(musicUrl && !musicVideoId){
+      showToast('Link do YouTube inválido');
+      return;
+    }
 
     const userRef = doc(db, 'users', currentUid);
     await updateDoc(userRef, {
@@ -1431,6 +1581,7 @@
     showToast('Perfil atualizado');
   });
 
+  // ---------- VER PERFIL DE QUALQUER PESSOA ----------
   const viewProfileModal = document.getElementById('view-profile-modal');
 
   function openProfileView(uid, data){
@@ -1490,12 +1641,15 @@
   }
 
   document.getElementById('close-view-profile-btn').addEventListener('click', () => viewProfileModal.classList.add('hidden'));
-  viewProfileModal.addEventListener('click', (e) => { if(e.target === viewProfileModal) viewProfileModal.classList.add('hidden'); });
+  viewProfileModal.addEventListener('click', (e) => {
+    if(e.target === viewProfileModal) viewProfileModal.classList.add('hidden');
+  });
   document.getElementById('view-profile-edit-btn').addEventListener('click', () => {
     viewProfileModal.classList.add('hidden');
     document.getElementById('open-personalize-btn').click();
   });
 
+  // ---------- QUESTS ----------
   function renderQuests(qsnap){
     const list = document.getElementById('quest-list');
     list.innerHTML = '';
@@ -1599,10 +1753,15 @@
   async function deleteQuest(questId){
     if(!currentUid) return;
     const questRef = doc(db, 'users', currentUid, 'quests', questId);
-    try{ await deleteDoc(questRef); }
-    catch(err){ console.error(err); showToast('Não foi possível remover a quest'); }
+    try{
+      await deleteDoc(questRef);
+    }catch(err){
+      console.error(err);
+      showToast('Não foi possível remover a quest');
+    }
   }
 
+  // ---------- GUILDA (amigos) ----------
   function renderGuild(gsnap){
     const list = document.getElementById('guild-list');
     list.innerHTML = '';
@@ -1643,18 +1802,21 @@
         ${noteHtml}
         <div class="guild-level mono">Nv.${level}</div>
       `;
-      if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(11,12,22,0.62) 0%, rgba(11,12,22,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
+      if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.62) 0%, rgba(10,14,20,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
       row.addEventListener('click', () => openProfileView(uid, u));
       wrap.appendChild(row);
 
       const noteBtn = row.querySelector('.note-btn');
-      if(noteBtn){ noteBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMusic(uid, u.musicVideoId); }); }
+      if(noteBtn){
+        noteBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMusic(uid, u.musicVideoId); });
+      }
     });
 
     list.appendChild(wrap);
     updateNoteButtons();
   }
 
+  // ---------- CONQUISTAS ----------
   const ACH_TYPE_LABELS = {
     total_completions: 'atividades concluídas',
     total_xp: 'XP total',
@@ -1702,7 +1864,9 @@
       try{
         await updateDoc(doc(db, 'users', currentUid), { unlockedAchievements: Array.from(unlocked) });
         newlyUnlocked.forEach((def) => showToast(`🏆 Conquista desbloqueada: ${def.title}`));
-      } finally { _checkingAchievements = false; }
+      } finally {
+        _checkingAchievements = false;
+      }
     }
   }
 
@@ -1729,6 +1893,7 @@
     });
   }
 
+  // ---------- ADMIN: CRUD de conquistas ----------
   const achTypeSelect = document.getElementById('ach-type');
   const achThresholdField = document.getElementById('ach-threshold-field');
   function syncThresholdVisibility(){
@@ -1781,8 +1946,12 @@
         <button class="adel" title="Remover conquista">×</button>
       `;
       row.querySelector('.adel').addEventListener('click', async () => {
-        try{ await deleteDoc(doc(db, 'achievements', def.id)); }
-        catch(err){ console.error(err); showToast('Não foi possível remover a conquista'); }
+        try{
+          await deleteDoc(doc(db, 'achievements', def.id));
+        }catch(err){
+          console.error(err);
+          showToast('Não foi possível remover a conquista');
+        }
       });
       list.appendChild(row);
     });
