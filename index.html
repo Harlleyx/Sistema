@@ -393,6 +393,100 @@
   .bgstyle-opt:hover{ border-color:var(--cyan); color:var(--text); }
   .bgstyle-opt.selected{ border-color:var(--gold); color:var(--gold); background:rgba(232,179,61,0.08); }
   .bgstyle-opt .bgstyle-icon{ font-size:20px; line-height:1; }
+
+  /* ---------- Conhecimento ---------- */
+  #knowledge-view{ flex:1; width:100%; max-width:760px; margin:0 auto; padding: 28px 20px 60px; }
+  .knowledge-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:12px; }
+  .knowledge-header h1{ font-family:'JetBrains Mono',monospace; font-size:16px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
+  .knowledge-header p.sub{ color:var(--text-dim); font-size:12px; margin-top:4px; }
+
+  .track-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:14px; }
+  .track-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px;
+    cursor:pointer; transition: border-color .15s, transform .15s; text-align:left;
+  }
+  .track-card:hover{ border-color:var(--gold); transform:translateY(-2px); }
+  .track-card .t-icon{ font-size:26px; margin-bottom:10px; }
+  .track-card .t-title{ font-weight:700; font-size:15px; margin-bottom:4px; }
+  .track-card .t-desc{ color:var(--text-dim); font-size:12px; line-height:1.4; margin-bottom:14px; min-height:32px; }
+  .track-card .t-progress-text{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); margin-bottom:6px; }
+  .track-card .mini-bar-outer{ height:6px; }
+
+  .knowledge-back{ margin-bottom:18px; }
+
+  .track-detail-head{ margin-bottom:26px; }
+  .track-detail-head .t-icon{ font-size:30px; }
+  .track-detail-head h2{ font-size:19px; font-weight:700; margin-top:8px; }
+  .track-detail-head p{ color:var(--text-dim); font-size:13px; margin-top:6px; line-height:1.5; }
+
+  .lesson-tree{ display:flex; flex-direction:column; align-items:center; padding:6px 0; }
+  .lesson-node-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .lesson-connector{ width:2px; height:26px; background:var(--border); }
+  .lesson-connector.done{ background:var(--gold); }
+  .lesson-node{
+    display:flex; align-items:center; gap:14px; width:100%; max-width:420px;
+    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+    cursor:pointer; transition: border-color .15s, transform .15s;
+  }
+  .lesson-node:hover{ border-color:var(--cyan); }
+  .lesson-node.completed{ border-color:var(--ok); }
+  .lesson-node.completed:hover{ border-color:var(--gold); }
+  .lesson-node.locked{ opacity:0.5; cursor:not-allowed; }
+  .lesson-node.locked:hover{ border-color:var(--border); }
+  .lesson-badge{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:15px; font-weight:800; font-family:'JetBrains Mono',monospace;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text-dim);
+  }
+  .lesson-node.completed .lesson-badge{ background:rgba(62,207,142,0.14); border-color:var(--ok); color:var(--ok); }
+  .lesson-node:not(.locked):not(.completed) .lesson-badge{ background:rgba(232,179,61,0.14); border-color:var(--gold); color:var(--gold); }
+  .lesson-info{ flex:1; min-width:0; }
+  .lesson-info .l-title{ font-size:14px; font-weight:600; }
+  .lesson-info .l-xp{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); margin-top:3px; }
+
+  /* Lesson detail modal */
+  .lesson-modal-desc{ color:var(--text); font-size:13px; line-height:1.6; margin-bottom:16px; white-space:pre-wrap; }
+  .lesson-modal-link{ display:inline-block; font-size:12px; margin-bottom:16px; }
+  .lesson-modal-xp{ font-family:'JetBrains Mono',monospace; color:var(--gold); font-size:13px; margin-bottom:18px; }
+  .lesson-modal-done-tag{
+    display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:12px;
+    color:var(--ok); background:rgba(62,207,142,0.1); border:1px solid var(--ok); padding:8px 12px; border-radius:7px;
+    width:100%; justify-content:center;
+  }
+
+  /* Admin tabs */
+  .admin-tabs{ display:flex; gap:8px; margin-bottom:22px; }
+  .admin-tab-btn{
+    background:transparent; border:1px solid var(--border); color:var(--text-dim); padding:8px 14px;
+    border-radius:7px; font-size:12px; font-family:'JetBrains Mono',monospace; cursor:pointer; letter-spacing:1px;
+  }
+  .admin-tab-btn.active{ border-color:var(--gold); color:var(--gold); background:rgba(232,179,61,0.08); }
+  .admin-section{ display:none; }
+  .admin-section.active{ display:block; }
+
+  .admin-track-item{ flex-direction:column; align-items:stretch; gap:10px; }
+  .admin-track-item .admin-track-top{ display:flex; align-items:center; gap:12px; }
+  .admin-track-item .admin-track-top .ainfo{ flex:1; min-width:0; cursor:pointer; }
+  .admin-track-lessons{ display:none; flex-direction:column; gap:10px; border-top:1px solid var(--border); padding-top:12px; margin-top:2px; }
+  .admin-track-lessons.open{ display:flex; }
+  .admin-lesson-form{ display:flex; flex-direction:column; gap:10px; }
+  .admin-lesson-form .row{ display:flex; gap:10px; }
+  .admin-lesson-form input{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif;
+  }
+  .admin-lesson-form button{
+    align-self:flex-start; background:var(--gold); color:#1a1204; border:none; border-radius:6px;
+    padding:8px 14px; font-weight:700; font-size:12px; cursor:pointer;
+  }
+  .admin-lesson-list{ display:flex; flex-direction:column; gap:8px; }
+  .admin-lesson-row{
+    display:flex; align-items:center; gap:10px; background:var(--panel-2); border:1px solid var(--border);
+    border-radius:7px; padding:9px 12px; font-size:12px;
+  }
+  .admin-lesson-row .l-order{ font-family:'JetBrains Mono',monospace; color:var(--text-dim); width:18px; }
+  .admin-lesson-row .l-name{ flex:1; min-width:0; }
+  .admin-lesson-row .l-xp-tag{ font-family:'JetBrains Mono',monospace; color:var(--gold); }
 </style>
 </head>
 <body>
@@ -421,6 +515,7 @@
       <div class="user-chip">
         <img id="topbar-avatar" src="" alt="" referrerpolicy="no-referrer">
         <span class="name" id="topbar-name"></span>
+        <button class="ghost accent" id="knowledge-link-btn" type="button">🧠 Conhecimento</button>
         <button class="ghost admin-link" id="admin-link-btn" type="button">⚙ Admin</button>
         <button class="ghost" id="logout-btn">Sair</button>
       </div>
@@ -478,10 +573,16 @@
   <!-- ADMIN VIEW (só visível para o e-mail definido em ADMIN_EMAIL) -->
   <div id="admin-view" class="hidden">
     <div class="admin-header">
-      <h1>Admin · Conquistas</h1>
+      <h1>Admin</h1>
       <button class="ghost" id="admin-back-btn" type="button">← Voltar ao dashboard</button>
     </div>
 
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" id="admin-tab-achievements" type="button">🏆 Conquistas</button>
+      <button class="admin-tab-btn" id="admin-tab-knowledge" type="button">🧠 Conhecimento</button>
+    </div>
+
+    <div class="admin-section active" id="admin-section-achievements">
     <form class="admin-form" id="admin-achievement-form">
       <div class="row">
         <div class="field">
@@ -521,6 +622,67 @@
     </form>
 
     <div class="admin-list" id="admin-achievements-list"></div>
+    </div>
+
+    <div class="admin-section" id="admin-section-knowledge">
+      <form class="admin-form" id="admin-track-form">
+        <div class="row">
+          <div class="field">
+            <label for="track-icon">Ícone (emoji)</label>
+            <input type="text" id="track-icon" maxlength="4" placeholder="🎬" required>
+          </div>
+          <div class="field" style="flex:3;">
+            <label for="track-title">Título da trilha</label>
+            <input type="text" id="track-title" maxlength="40" placeholder="Ex: Edição de vídeo" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="track-desc">Descrição</label>
+          <input type="text" id="track-desc" maxlength="120" placeholder="Ex: Do zero ao corte profissional" required>
+        </div>
+        <button type="submit" class="btn-save">+ Adicionar trilha</button>
+      </form>
+
+      <div class="admin-list" id="admin-tracks-list"></div>
+    </div>
+  </div>
+
+  <!-- KNOWLEDGE VIEW (área de conhecimento) -->
+  <div id="knowledge-view" class="hidden">
+    <!-- Lista de trilhas -->
+    <div id="knowledge-tracks-view">
+      <div class="knowledge-header">
+        <div>
+          <h1>Área de Conhecimento</h1>
+          <p class="sub">Trilhas de aprendizado. Complete as lições em ordem para ganhar XP.</p>
+        </div>
+        <button class="ghost" id="knowledge-back-to-dash-btn" type="button">← Voltar</button>
+      </div>
+      <div class="track-grid" id="track-grid"></div>
+    </div>
+
+    <!-- Detalhe de uma trilha -->
+    <div id="knowledge-track-detail-view" class="hidden">
+      <button class="ghost knowledge-back" id="track-detail-back-btn" type="button">← Trilhas</button>
+      <div class="track-detail-head">
+        <div class="t-icon" id="track-detail-icon"></div>
+        <h2 id="track-detail-title"></h2>
+        <p id="track-detail-desc"></p>
+      </div>
+      <div class="lesson-tree" id="lesson-tree"></div>
+    </div>
+  </div>
+
+  <!-- LESSON DETAIL MODAL -->
+  <div id="lesson-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <button class="modal-close" id="close-lesson-modal-btn" type="button">×</button>
+      <h3 id="lesson-modal-title"></h3>
+      <p class="modal-sub" id="lesson-modal-xp"></p>
+      <p class="lesson-modal-desc" id="lesson-modal-desc"></p>
+      <a class="lesson-modal-link" id="lesson-modal-link" href="#" target="_blank" rel="noopener">🔗 Abrir material da lição</a>
+      <div id="lesson-modal-actions"></div>
+    </div>
   </div>
 
   <!-- PROFILE EDIT MODAL -->
@@ -1313,6 +1475,7 @@ const firebaseConfig = {
     if(questsUnsub){ questsUnsub(); questsUnsub = null; }
     if(guildUnsub){ guildUnsub(); guildUnsub = null; }
     if(achievementsUnsub){ achievementsUnsub(); achievementsUnsub = null; }
+    stopKnowledgeListeners();
 
     if(!user){
       currentUid = null;
@@ -1321,6 +1484,7 @@ const firebaseConfig = {
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('hidden');
       document.getElementById('admin-view').classList.add('hidden');
+      document.getElementById('knowledge-view').classList.add('hidden');
       document.getElementById('admin-link-btn').classList.remove('show');
       return;
     }
@@ -1352,6 +1516,7 @@ const firebaseConfig = {
         lastActivityDate: null,
         totalCompletions: 0,
         unlockedAchievements: [],
+        completedLessons: [],
         createdAt: serverTimestamp()
       });
     } else {
@@ -1369,6 +1534,8 @@ const firebaseConfig = {
       renderStatus(data);
       renderAchievements();
       checkAchievements(data);
+      renderTrackGrid();
+      if(currentOpenTrackId) renderLessonTree(currentOpenTrackId);
       if(personalizeModal.classList.contains('hidden')){
         originalTheme = data.themeColor || DEFAULT_GOLD;
         applyTheme(originalTheme);
@@ -1399,20 +1566,36 @@ const firebaseConfig = {
       checkAchievements(myProfile);
     });
 
+    startKnowledgeListeners();
+
     renderRoute();
   });
 
   // ---------- ROTEAMENTO (dashboard vs admin) ----------
   function renderRoute(){
-    const wantsAdmin = window.location.hash === '#admin';
+    const hash = window.location.hash;
+    const wantsAdmin = hash === '#admin';
+    const wantsKnowledge = hash === '#knowledge';
+
+    document.getElementById('dashboard-view').classList.add('hidden');
+    document.getElementById('admin-view').classList.add('hidden');
+    document.getElementById('knowledge-view').classList.add('hidden');
+
     if(wantsAdmin && isAdmin){
-      document.getElementById('dashboard-view').classList.add('hidden');
       document.getElementById('admin-view').classList.remove('hidden');
-    } else {
-      if(wantsAdmin && !isAdmin){ window.location.hash = ''; }
-      document.getElementById('admin-view').classList.add('hidden');
-      if(currentUid){ document.getElementById('dashboard-view').classList.remove('hidden'); }
+      return;
     }
+    if(wantsAdmin && !isAdmin){ window.location.hash = ''; return; }
+
+    if(wantsKnowledge && currentUid){
+      currentOpenTrackId = null;
+      document.getElementById('knowledge-track-detail-view').classList.add('hidden');
+      document.getElementById('knowledge-tracks-view').classList.remove('hidden');
+      document.getElementById('knowledge-view').classList.remove('hidden');
+      return;
+    }
+
+    if(currentUid){ document.getElementById('dashboard-view').classList.remove('hidden'); }
   }
   window.addEventListener('hashchange', renderRoute);
   document.getElementById('admin-link-btn').addEventListener('click', () => { window.location.hash = '#admin'; });
@@ -1954,6 +2137,360 @@ const firebaseConfig = {
         }
       });
       list.appendChild(row);
+    });
+  }
+
+  // ========================= ÁREA DE CONHECIMENTO =========================
+  let knowledgeTracksUnsub = null;
+  let trackDefs = [];                    // snapshot da coleção "knowledgeTracks"
+  const lessonsByTrack = new Map();      // trackId -> array de lições ordenadas
+  const trackLessonUnsubs = new Map();   // trackId -> unsub da subcoleção "lessons"
+  let currentOpenTrackId = null;         // trilha aberta na view de detalhe (usuário)
+  let adminOpenTrackId = null;           // trilha expandida no admin
+
+  function lessonKey(trackId, lessonId){ return trackId + '::' + lessonId; }
+  function myCompletedLessons(){ return new Set(myProfile.completedLessons || []); }
+
+  function subscribeTrackLessons(trackId){
+    if(trackLessonUnsubs.has(trackId)) return;
+    const lessonsCol = collection(db, 'knowledgeTracks', trackId, 'lessons');
+    const unsub = onSnapshot(lessonsCol, (lsnap) => {
+      const arr = [];
+      lsnap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
+      arr.sort((a,b) => (a.order||0) - (b.order||0));
+      lessonsByTrack.set(trackId, arr);
+      renderTrackGrid();
+      if(currentOpenTrackId === trackId) renderLessonTree(trackId);
+      if(adminOpenTrackId === trackId) renderAdminLessonList(trackId);
+    });
+    trackLessonUnsubs.set(trackId, unsub);
+  }
+
+  function unsubscribeTrackLessons(trackId){
+    const unsub = trackLessonUnsubs.get(trackId);
+    if(unsub){ unsub(); trackLessonUnsubs.delete(trackId); }
+    lessonsByTrack.delete(trackId);
+  }
+
+  function startKnowledgeListeners(){
+    const tracksColRef = collection(db, 'knowledgeTracks');
+    knowledgeTracksUnsub = onSnapshot(tracksColRef, (tsnap) => {
+      const seenIds = new Set();
+      trackDefs = [];
+      tsnap.forEach((d) => { trackDefs.push({ id: d.id, ...d.data() }); seenIds.add(d.id); });
+      trackDefs.sort((a,b) => (a.order||0) - (b.order||0));
+
+      Array.from(trackLessonUnsubs.keys()).forEach((tid) => {
+        if(!seenIds.has(tid)) unsubscribeTrackLessons(tid);
+      });
+      trackDefs.forEach((t) => subscribeTrackLessons(t.id));
+
+      renderTrackGrid();
+      renderAdminTracksList();
+    });
+  }
+
+  function stopKnowledgeListeners(){
+    if(knowledgeTracksUnsub){ knowledgeTracksUnsub(); knowledgeTracksUnsub = null; }
+    Array.from(trackLessonUnsubs.keys()).forEach(unsubscribeTrackLessons);
+    trackDefs = [];
+  }
+
+  // ---- Navegação ----
+  document.getElementById('knowledge-link-btn').addEventListener('click', () => { window.location.hash = '#knowledge'; });
+  document.getElementById('knowledge-back-to-dash-btn').addEventListener('click', () => { window.location.hash = ''; });
+  document.getElementById('track-detail-back-btn').addEventListener('click', () => {
+    currentOpenTrackId = null;
+    document.getElementById('knowledge-track-detail-view').classList.add('hidden');
+    document.getElementById('knowledge-tracks-view').classList.remove('hidden');
+  });
+
+  function openTrackDetail(trackId){
+    currentOpenTrackId = trackId;
+    const track = trackDefs.find((t) => t.id === trackId);
+    if(!track) return;
+    document.getElementById('track-detail-icon').textContent = track.icon || '📘';
+    document.getElementById('track-detail-title').textContent = track.title || '';
+    document.getElementById('track-detail-desc').textContent = track.description || '';
+    document.getElementById('knowledge-tracks-view').classList.add('hidden');
+    document.getElementById('knowledge-track-detail-view').classList.remove('hidden');
+    renderLessonTree(trackId);
+  }
+
+  function renderTrackGrid(){
+    const grid = document.getElementById('track-grid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    if(!trackDefs.length){
+      grid.innerHTML = '<p class="empty-note">Nenhuma trilha cadastrada ainda. Peça para o admin criar uma em ⚙ Admin → 🧠 Conhecimento.</p>';
+      return;
+    }
+    const completed = myCompletedLessons();
+    trackDefs.forEach((t) => {
+      const lessons = lessonsByTrack.get(t.id) || [];
+      const total = lessons.length;
+      const done = lessons.filter((l) => completed.has(lessonKey(t.id, l.id))).length;
+      const pct = total ? Math.round((done/total)*100) : 0;
+
+      const card = document.createElement('div');
+      card.className = 'track-card';
+      card.innerHTML = `
+        <div class="t-icon">${t.icon || '📘'}</div>
+        <div class="t-title">${t.title || ''}</div>
+        <div class="t-desc">${t.description || ''}</div>
+        <div class="t-progress-text">${done} / ${total} lições</div>
+        <div class="mini-bar-outer"><div class="mini-bar-inner" style="width:${pct}%"></div></div>
+      `;
+      card.addEventListener('click', () => openTrackDetail(t.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function renderLessonTree(trackId){
+    const wrap = document.getElementById('lesson-tree');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    const lessons = lessonsByTrack.get(trackId) || [];
+    if(!lessons.length){
+      wrap.innerHTML = '<p class="empty-note">Nenhuma lição cadastrada nesta trilha ainda.</p>';
+      return;
+    }
+    const completed = myCompletedLessons();
+    let previousDone = true; // a primeira lição do caminho sempre começa destravada
+    lessons.forEach((l, idx) => {
+      const isDone = completed.has(lessonKey(trackId, l.id));
+      const isLocked = !isDone && !previousDone;
+
+      if(idx > 0){
+        const connector = document.createElement('div');
+        connector.className = 'lesson-connector' + (previousDone ? ' done' : '');
+        wrap.appendChild(connector);
+      }
+
+      const nodeWrap = document.createElement('div');
+      nodeWrap.className = 'lesson-node-wrap';
+      const node = document.createElement('div');
+      node.className = 'lesson-node' + (isDone ? ' completed' : '') + (isLocked ? ' locked' : '');
+      node.innerHTML = `
+        <div class="lesson-badge">${isDone ? '✓' : (isLocked ? '🔒' : (idx+1))}</div>
+        <div class="lesson-info">
+          <div class="l-title">${l.title || ''}</div>
+          <div class="l-xp">+${l.xpValue || 0} XP</div>
+        </div>
+      `;
+      if(!isLocked){
+        node.addEventListener('click', () => openLessonModal(trackId, l, isDone));
+      }
+      nodeWrap.appendChild(node);
+      wrap.appendChild(nodeWrap);
+
+      previousDone = isDone;
+    });
+  }
+
+  // ---- Modal de lição ----
+  const lessonModal = document.getElementById('lesson-modal');
+  document.getElementById('close-lesson-modal-btn').addEventListener('click', () => lessonModal.classList.add('hidden'));
+  lessonModal.addEventListener('click', (e) => { if(e.target === lessonModal) lessonModal.classList.add('hidden'); });
+
+  function openLessonModal(trackId, lesson, isDone){
+    document.getElementById('lesson-modal-title').textContent = lesson.title || '';
+    document.getElementById('lesson-modal-xp').textContent = `+${lesson.xpValue || 0} XP ao concluir`;
+    document.getElementById('lesson-modal-desc').textContent = lesson.description || '';
+    const linkEl = document.getElementById('lesson-modal-link');
+    if(lesson.contentUrl){
+      linkEl.href = lesson.contentUrl;
+      linkEl.classList.remove('hidden');
+    } else {
+      linkEl.classList.add('hidden');
+    }
+    const actions = document.getElementById('lesson-modal-actions');
+    actions.innerHTML = '';
+    if(isDone){
+      const tag = document.createElement('div');
+      tag.className = 'lesson-modal-done-tag';
+      tag.textContent = '✓ Lição concluída';
+      actions.appendChild(tag);
+    } else {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-save';
+      btn.style.cssText = 'width:100%;padding:11px;border-radius:7px;border:none;font-weight:700;cursor:pointer;';
+      btn.textContent = 'Concluir lição';
+      btn.addEventListener('click', () => completeLesson(trackId, lesson.id, lesson.xpValue || 0));
+      actions.appendChild(btn);
+    }
+    lessonModal.classList.remove('hidden');
+  }
+
+  async function completeLesson(trackId, lessonId, xpValue){
+    if(!currentUid) return;
+    const key = lessonKey(trackId, lessonId);
+    if(myCompletedLessons().has(key)) return;
+
+    const userRef = doc(db, 'users', currentUid);
+    const userSnap = await getDoc(userRef);
+    const u = userSnap.data() || {};
+    const currentXp = u.xp || 0;
+    const completedLessons = Array.isArray(u.completedLessons) ? u.completedLessons.slice() : [];
+    if(completedLessons.includes(key)) return;
+    completedLessons.push(key);
+
+    await updateDoc(userRef, {
+      xp: currentXp + xpValue,
+      completedLessons
+    });
+
+    showToast(`+${xpValue} XP`);
+    lessonModal.classList.add('hidden');
+  }
+
+  // ---- Admin: tabs ----
+  document.getElementById('admin-tab-achievements').addEventListener('click', () => setAdminTab('achievements'));
+  document.getElementById('admin-tab-knowledge').addEventListener('click', () => setAdminTab('knowledge'));
+  function setAdminTab(tab){
+    document.getElementById('admin-tab-achievements').classList.toggle('active', tab === 'achievements');
+    document.getElementById('admin-tab-knowledge').classList.toggle('active', tab === 'knowledge');
+    document.getElementById('admin-section-achievements').classList.toggle('active', tab === 'achievements');
+    document.getElementById('admin-section-knowledge').classList.toggle('active', tab === 'knowledge');
+  }
+
+  // ---- Admin: CRUD de trilhas e lições ----
+  document.getElementById('admin-track-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!isAdmin) return;
+    const icon = document.getElementById('track-icon').value.trim() || '📘';
+    const title = document.getElementById('track-title').value.trim();
+    const description = document.getElementById('track-desc').value.trim();
+    if(!title || !description) return;
+
+    const tracksColRef = collection(db, 'knowledgeTracks');
+    const newRef = doc(tracksColRef);
+    await setDoc(newRef, { icon, title, description, order: Date.now() });
+
+    e.target.reset();
+    showToast('Trilha criada');
+  });
+
+  function renderAdminTracksList(){
+    const list = document.getElementById('admin-tracks-list');
+    if(!list) return;
+    list.innerHTML = '';
+    if(!trackDefs.length){
+      list.innerHTML = '<p class="empty-note">Nenhuma trilha cadastrada ainda.</p>';
+      return;
+    }
+    trackDefs.forEach((t) => {
+      const row = document.createElement('div');
+      row.className = 'admin-item admin-track-item';
+
+      const top = document.createElement('div');
+      top.className = 'admin-track-top';
+      top.innerHTML = `
+        <div class="aicon">${t.icon || '📘'}</div>
+        <div class="ainfo">
+          <div class="atitle">${t.title || ''}</div>
+          <div class="ameta">${t.description || ''} · clique para gerenciar lições</div>
+        </div>
+        <button class="adel" title="Remover trilha">×</button>
+      `;
+      top.querySelector('.ainfo').addEventListener('click', () => toggleAdminTrackLessons(t.id, row));
+      top.querySelector('.adel').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try{
+          await deleteDoc(doc(db, 'knowledgeTracks', t.id));
+        }catch(err){
+          console.error(err);
+          showToast('Não foi possível remover a trilha');
+        }
+      });
+      row.appendChild(top);
+
+      const lessonsBlock = document.createElement('div');
+      lessonsBlock.className = 'admin-track-lessons';
+      lessonsBlock.dataset.trackId = t.id;
+      lessonsBlock.innerHTML = `
+        <form class="admin-lesson-form" data-track-id="${t.id}">
+          <div class="row">
+            <input type="text" name="title" placeholder="Título da lição" required maxlength="60" style="flex:2;">
+            <input type="number" name="xp" placeholder="XP" required min="1" max="1000" value="10" style="width:70px;">
+          </div>
+          <input type="text" name="description" placeholder="Descrição da lição" maxlength="300">
+          <input type="url" name="contentUrl" placeholder="Link do material (opcional)">
+          <button type="submit">+ Adicionar lição</button>
+        </form>
+        <div class="admin-lesson-list"></div>
+      `;
+      row.appendChild(lessonsBlock);
+      lessonsBlock.querySelector('.admin-lesson-form').addEventListener('submit', (ev) => addLessonSubmit(ev, t.id));
+
+      list.appendChild(row);
+      if(adminOpenTrackId === t.id){
+        lessonsBlock.classList.add('open');
+        renderAdminLessonList(t.id);
+      }
+    });
+  }
+
+  function toggleAdminTrackLessons(trackId, rowEl){
+    const block = rowEl.querySelector('.admin-track-lessons');
+    const isOpen = block.classList.contains('open');
+    if(isOpen){
+      block.classList.remove('open');
+      adminOpenTrackId = null;
+    } else {
+      document.querySelectorAll('.admin-track-lessons.open').forEach((b) => b.classList.remove('open'));
+      block.classList.add('open');
+      adminOpenTrackId = trackId;
+      renderAdminLessonList(trackId);
+    }
+  }
+
+  async function addLessonSubmit(e, trackId){
+    e.preventDefault();
+    if(!isAdmin) return;
+    const form = e.target;
+    const title = form.title.value.trim();
+    const xpValue = parseInt(form.xp.value, 10) || 10;
+    const description = form.description.value.trim();
+    const contentUrl = form.contentUrl.value.trim();
+    if(!title) return;
+
+    const lessonsColRef = collection(db, 'knowledgeTracks', trackId, 'lessons');
+    const newRef = doc(lessonsColRef);
+    await setDoc(newRef, { title, xpValue, description, contentUrl, order: Date.now() });
+    form.reset();
+    form.xp.value = 10;
+    showToast('Lição adicionada');
+  }
+
+  function renderAdminLessonList(trackId){
+    const block = document.querySelector(`.admin-track-lessons[data-track-id="${trackId}"] .admin-lesson-list`);
+    if(!block) return;
+    const lessons = lessonsByTrack.get(trackId) || [];
+    block.innerHTML = '';
+    if(!lessons.length){
+      block.innerHTML = '<p class="empty-note">Nenhuma lição ainda.</p>';
+      return;
+    }
+    lessons.forEach((l, idx) => {
+      const row = document.createElement('div');
+      row.className = 'admin-lesson-row';
+      row.innerHTML = `
+        <div class="l-order">${idx+1}</div>
+        <div class="l-name">${l.title || ''}</div>
+        <div class="l-xp-tag">+${l.xpValue || 0} XP</div>
+        <button class="adel" title="Remover lição">×</button>
+      `;
+      row.querySelector('.adel').addEventListener('click', async () => {
+        try{
+          await deleteDoc(doc(db, 'knowledgeTracks', trackId, 'lessons', l.id));
+        }catch(err){
+          console.error(err);
+          showToast('Não foi possível remover a lição');
+        }
+      });
+      block.appendChild(row);
     });
   }
 </script>
