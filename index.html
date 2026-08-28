@@ -421,30 +421,43 @@
   .track-detail-head h2{ font-size:19px; font-weight:700; margin-top:8px; }
   .track-detail-head p{ color:var(--text-dim); font-size:13px; margin-top:6px; line-height:1.5; }
 
+  /* ---------- Trilha estilo "grafo" (Obsidian) ---------- */
+  .obsidian-graph{ position:relative; width:100%; padding:10px 0 6px; }
+  .obsidian-graph svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .graph-edge{ stroke: var(--border); stroke-width:1.5; transition: stroke .3s; }
+  .graph-edge.done{ stroke: var(--gold-dim); stroke-width:2; }
+  .graph-node-halo{
+    fill:none; stroke:var(--gold); stroke-width:2; opacity:0.55;
+    transform-box: fill-box; transform-origin:center;
+    animation: node-pulse 1.8s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes node-pulse{
+    0%{ transform:scale(1); opacity:0.55; }
+    100%{ transform:scale(1.9); opacity:0; }
+  }
+  .graph-node-circle{ cursor:pointer; transition: r .15s ease, filter .15s ease; }
+  .graph-node-circle.is-locked{ cursor:not-allowed; }
+  .graph-node-circle.is-done{ filter: drop-shadow(0 0 5px rgba(62,207,142,0.55)); }
+  .graph-node-circle.is-available{ filter: drop-shadow(0 0 6px rgba(232,179,61,0.55)); }
+  .graph-node-hit{ fill:transparent; cursor:pointer; }
+  .graph-node-hit.is-locked{ cursor:not-allowed; }
+  .graph-node-icon{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800;
+    text-anchor:middle; dominant-baseline:central; pointer-events:none;
+  }
+  .graph-node-icon.is-done{ fill:#08170f; }
+  .graph-node-icon.is-available{ fill:#1a1204; }
+  .graph-node-icon.is-locked{ fill: var(--text-dim); }
+  .graph-node-label{
+    width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    text-align:center; font-family:'Inter',sans-serif; font-size:11.5px; line-height:1.3; color:var(--text-dim);
+    pointer-events:none;
+  }
+  .graph-node-label.is-active{ color:var(--text); font-weight:600; }
+  .graph-node-label .g-xp{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--gold); margin-top:2px; }
+
   .lesson-tree{ display:flex; flex-direction:column; align-items:center; padding:6px 0; }
-  .lesson-node-wrap{ display:flex; flex-direction:column; align-items:center; }
-  .lesson-connector{ width:2px; height:26px; background:var(--border); }
-  .lesson-connector.done{ background:var(--gold); }
-  .lesson-node{
-    display:flex; align-items:center; gap:14px; width:100%; max-width:420px;
-    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
-    cursor:pointer; transition: border-color .15s, transform .15s;
-  }
-  .lesson-node:hover{ border-color:var(--cyan); }
-  .lesson-node.completed{ border-color:var(--ok); }
-  .lesson-node.completed:hover{ border-color:var(--gold); }
-  .lesson-node.locked{ opacity:0.5; cursor:not-allowed; }
-  .lesson-node.locked:hover{ border-color:var(--border); }
-  .lesson-badge{
-    width:38px; height:38px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    font-size:15px; font-weight:800; font-family:'JetBrains Mono',monospace;
-    background:var(--panel-2); border:1px solid var(--border); color:var(--text-dim);
-  }
-  .lesson-node.completed .lesson-badge{ background:rgba(62,207,142,0.14); border-color:var(--ok); color:var(--ok); }
-  .lesson-node:not(.locked):not(.completed) .lesson-badge{ background:rgba(232,179,61,0.14); border-color:var(--gold); color:var(--gold); }
-  .lesson-info{ flex:1; min-width:0; }
-  .lesson-info .l-title{ font-size:14px; font-weight:600; }
-  .lesson-info .l-xp{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); margin-top:3px; }
 
   /* Lesson detail modal */
   .lesson-modal-desc{ color:var(--text); font-size:13px; line-height:1.6; margin-bottom:16px; white-space:pre-wrap; }
@@ -2248,45 +2261,95 @@ const firebaseConfig = {
     });
   }
 
+  // ---- Trilha em estilo grafo (bolinhas conectadas, tipo Obsidian) ----
   function renderLessonTree(trackId){
     const wrap = document.getElementById('lesson-tree');
     if(!wrap) return;
-    wrap.innerHTML = '';
     const lessons = lessonsByTrack.get(trackId) || [];
     if(!lessons.length){
       wrap.innerHTML = '<p class="empty-note">Nenhuma lição cadastrada nesta trilha ainda.</p>';
       return;
     }
     const completed = myCompletedLessons();
-    let previousDone = true; // a primeira lição do caminho sempre começa destravada
-    lessons.forEach((l, idx) => {
-      const isDone = completed.has(lessonKey(trackId, l.id));
+
+    // calcula estado (feita / disponível / travada) mantendo a progressão em ordem
+    let previousDone = true;
+    const states = lessons.map((l) => {
+      const key = lessonKey(trackId, l.id);
+      const isDone = completed.has(key);
       const isLocked = !isDone && !previousDone;
-
-      if(idx > 0){
-        const connector = document.createElement('div');
-        connector.className = 'lesson-connector' + (previousDone ? ' done' : '');
-        wrap.appendChild(connector);
-      }
-
-      const nodeWrap = document.createElement('div');
-      nodeWrap.className = 'lesson-node-wrap';
-      const node = document.createElement('div');
-      node.className = 'lesson-node' + (isDone ? ' completed' : '') + (isLocked ? ' locked' : '');
-      node.innerHTML = `
-        <div class="lesson-badge">${isDone ? '✓' : (isLocked ? '🔒' : (idx+1))}</div>
-        <div class="lesson-info">
-          <div class="l-title">${l.title || ''}</div>
-          <div class="l-xp">+${l.xpValue || 0} XP</div>
-        </div>
-      `;
-      if(!isLocked){
-        node.addEventListener('click', () => openLessonModal(trackId, l, isDone));
-      }
-      nodeWrap.appendChild(node);
-      wrap.appendChild(nodeWrap);
-
+      const isAvailable = !isDone && !isLocked;
       previousDone = isDone;
+      return { ...l, key, isDone, isLocked, isAvailable };
+    });
+
+    // layout tipo "constelação": zigue-zague suave, nós circulares, linhas conectando
+    const W = 340;
+    const spacingY = 108;
+    const topPad = 46;
+    const H = topPad + (states.length - 1) * spacingY + 46;
+    const centerX = W / 2;
+    const amp = 92;
+
+    const pos = states.map((n, idx) => ({
+      ...n,
+      x: centerX + Math.sin(idx * 0.85 + 0.3) * amp,
+      y: topPad + idx * spacingY
+    }));
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
+
+    // arestas conectando os nós em sequência
+    for(let i = 1; i < pos.length; i++){
+      const a = pos[i - 1], b = pos[i];
+      svg += `<line class="graph-edge${a.isDone ? ' done' : ''}" x1="${a.x.toFixed(1)}" y1="${a.y}" x2="${b.x.toFixed(1)}" y2="${b.y}" />`;
+    }
+
+    // nós (bolinhas)
+    pos.forEach((n, idx) => {
+      const r = n.isDone ? 15 : (n.isAvailable ? 14 : 10);
+      let fill = 'var(--panel-2)', stroke = 'var(--border)', strokeWidth = 1.5, stateClass = 'is-locked';
+      let iconText = n.isLocked ? '🔒' : String(idx + 1);
+      let iconClass = 'is-locked';
+      if(n.isDone){
+        fill = 'var(--ok)'; stroke = 'var(--ok)'; strokeWidth = 2; stateClass = 'is-done'; iconText = '✓'; iconClass = 'is-done';
+      } else if(n.isAvailable){
+        fill = 'var(--panel-2)'; stroke = 'var(--gold)'; strokeWidth = 2.5; stateClass = 'is-available'; iconClass = 'is-available';
+      }
+
+      if(n.isAvailable){
+        svg += `<circle class="graph-node-halo" cx="${n.x.toFixed(1)}" cy="${n.y}" r="${r}" style="--r:${r};" />`;
+      }
+      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+      if(!n.isLocked){
+        svg += `<text class="graph-node-icon ${iconClass}" x="${n.x.toFixed(1)}" y="${n.y + 0.5}">${iconText}</text>`;
+      } else {
+        svg += `<text class="graph-node-icon ${iconClass}" x="${n.x.toFixed(1)}" y="${n.y + 0.5}" font-size="10">${iconText}</text>`;
+      }
+      // área de toque maior (facilita clique/toque em mobile)
+      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y}" r="${Math.max(r, 22)}" />`;
+
+      // rótulo (título + xp) abaixo do nó, alternando lado pra não estourar a largura
+      const labelW = 128;
+      const labelX = Math.min(Math.max(n.x - labelW / 2, 4), W - labelW - 4);
+      svg += `<foreignObject x="${labelX.toFixed(1)}" y="${n.y + r + 6}" width="${labelW}" height="40">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="graph-node-label${n.isAvailable ? ' is-active' : ''}">
+          <span>${(n.title || '').replace(/</g,'&lt;')}</span>
+          <span class="g-xp">+${n.xpValue || 0} XP</span>
+        </div>
+      </foreignObject>`;
+    });
+
+    svg += `</svg>`;
+
+    wrap.innerHTML = `<div class="obsidian-graph">${svg}</div>`;
+
+    wrap.querySelectorAll('.graph-node-hit:not(.is-locked)').forEach((hit) => {
+      hit.addEventListener('click', () => {
+        const idx = parseInt(hit.dataset.idx, 10);
+        const n = pos[idx];
+        openLessonModal(trackId, n, n.isDone);
+      });
     });
   }
 
