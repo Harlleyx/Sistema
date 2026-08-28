@@ -2262,6 +2262,18 @@ const firebaseConfig = {
   }
 
   // ---- Trilha em estilo grafo (bolinhas conectadas, tipo Obsidian) ----
+  // Gera um layout "orgânico": posição pseudo-aleatória determinística por lição
+  // (mesmo id → sempre a mesma posição), com correção mínima de sobreposição,
+  // pra parecer uma rede real e não uma onda perfeita.
+  function seededRandom(seed){
+    let s = 0;
+    for(let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
+    return function(){
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
+
   function renderLessonTree(trackId){
     const wrap = document.getElementById('lesson-tree');
     if(!wrap) return;
@@ -2283,61 +2295,67 @@ const firebaseConfig = {
       return { ...l, key, isDone, isLocked, isAvailable };
     });
 
-    // layout tipo "constelação": zigue-zague suave, nós circulares, linhas conectando
-    const W = 340;
-    const spacingY = 108;
-    const topPad = 46;
-    const H = topPad + (states.length - 1) * spacingY + 46;
+    const W = 400;
+    const spacingY = 118;
+    const topPad = 40;
+    const H = topPad + (states.length - 1) * spacingY + 44;
     const centerX = W / 2;
-    const amp = 92;
+    const maxSpread = Math.min(140, W / 2 - 34);
+    const rnd = seededRandom(trackId);
 
-    const pos = states.map((n, idx) => ({
-      ...n,
-      x: centerX + Math.sin(idx * 0.85 + 0.3) * amp,
-      y: topPad + idx * spacingY
-    }));
+    // posição base: avança em Y, oscila em X com uma curva suave + ruído leve,
+    // como um "caminho" desenhado à mão em vez de uma senoide perfeita
+    let dir = rnd() > 0.5 ? 1 : -1;
+    const pos = states.map((n, idx) => {
+      if(idx > 0 && rnd() > 0.55) dir *= -1; // muda de lado de vez em quando, não sempre
+      const wobble = (rnd() - 0.5) * 30;
+      const t = idx / Math.max(1, states.length - 1);
+      const envelope = 0.55 + 0.45 * Math.sin(t * Math.PI); // menos espalhado nas pontas
+      const x = centerX + dir * maxSpread * envelope * (0.55 + rnd() * 0.45) + wobble;
+      const y = topPad + idx * spacingY + (rnd() - 0.5) * 14;
+      return { ...n, x: Math.min(Math.max(x, 30), W - 30), y };
+    });
 
     let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
 
-    // arestas conectando os nós em sequência
+    // arestas: curvas suaves (não linhas retas) ligando cada nó ao próximo
     for(let i = 1; i < pos.length; i++){
       const a = pos[i - 1], b = pos[i];
-      svg += `<line class="graph-edge${a.isDone ? ' done' : ''}" x1="${a.x.toFixed(1)}" y1="${a.y}" x2="${b.x.toFixed(1)}" y2="${b.y}" />`;
+      const midY = (a.y + b.y) / 2;
+      const path = `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} C ${a.x.toFixed(1)} ${midY.toFixed(1)}, ${b.x.toFixed(1)} ${midY.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+      svg += `<path class="graph-edge${a.isDone ? ' done' : ''}" d="${path}" fill="none" />`;
     }
 
-    // nós (bolinhas)
+    // nós (bolinhas), desenhados por cima das arestas
     pos.forEach((n, idx) => {
-      const r = n.isDone ? 15 : (n.isAvailable ? 14 : 10);
-      let fill = 'var(--panel-2)', stroke = 'var(--border)', strokeWidth = 1.5, stateClass = 'is-locked';
-      let iconText = n.isLocked ? '🔒' : String(idx + 1);
-      let iconClass = 'is-locked';
-      if(n.isDone){
-        fill = 'var(--ok)'; stroke = 'var(--ok)'; strokeWidth = 2; stateClass = 'is-done'; iconText = '✓'; iconClass = 'is-done';
-      } else if(n.isAvailable){
-        fill = 'var(--panel-2)'; stroke = 'var(--gold)'; strokeWidth = 2.5; stateClass = 'is-available'; iconClass = 'is-available';
-      }
+      const r = n.isDone ? 13 : (n.isAvailable ? 13 : 9);
 
       if(n.isAvailable){
-        svg += `<circle class="graph-node-halo" cx="${n.x.toFixed(1)}" cy="${n.y}" r="${r}" style="--r:${r};" />`;
+        svg += `<circle class="graph-node-halo" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" style="--r:${r};" />`;
       }
-      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
-      if(!n.isLocked){
-        svg += `<text class="graph-node-icon ${iconClass}" x="${n.x.toFixed(1)}" y="${n.y + 0.5}">${iconText}</text>`;
-      } else {
-        svg += `<text class="graph-node-icon ${iconClass}" x="${n.x.toFixed(1)}" y="${n.y + 0.5}" font-size="10">${iconText}</text>`;
+
+      let stateClass = 'is-locked';
+      if(n.isDone) stateClass = 'is-done';
+      else if(n.isAvailable) stateClass = 'is-available';
+
+      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" />`;
+      if(n.isDone){
+        svg += `<text class="graph-node-icon is-done" x="${n.x.toFixed(1)}" y="${(n.y + 0.5).toFixed(1)}">✓</text>`;
+      } else if(n.isLocked){
+        svg += `<text class="graph-node-icon is-locked" x="${n.x.toFixed(1)}" y="${(n.y + 0.5).toFixed(1)}" font-size="9">🔒</text>`;
       }
       // área de toque maior (facilita clique/toque em mobile)
-      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y}" r="${Math.max(r, 22)}" />`;
+      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${Math.max(r, 22)}" />`;
 
-      // rótulo (título + xp) abaixo do nó, alternando lado pra não estourar a largura
-      const labelW = 128;
-      const labelX = Math.min(Math.max(n.x - labelW / 2, 4), W - labelW - 4);
-      svg += `<foreignObject x="${labelX.toFixed(1)}" y="${n.y + r + 6}" width="${labelW}" height="40">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="graph-node-label${n.isAvailable ? ' is-active' : ''}">
-          <span>${(n.title || '').replace(/</g,'&lt;')}</span>
-          <span class="g-xp">+${n.xpValue || 0} XP</span>
-        </div>
-      </foreignObject>`;
+      // rótulo discreto: só título, sem caixinha, cor apagada — feito para não competir com os nós
+      const labelW = 108;
+      const labelX = Math.min(Math.max(n.x - labelW / 2, 2), W - labelW - 2);
+      const showLabel = !n.isLocked;
+      if(showLabel){
+        svg += `<foreignObject x="${labelX.toFixed(1)}" y="${(n.y + r + 5).toFixed(1)}" width="${labelW}" height="30">
+          <div xmlns="http://www.w3.org/1999/xhtml" class="graph-node-label${n.isAvailable ? ' is-active' : ''}">${(n.title || '').replace(/</g,'&lt;')}</div>
+        </foreignObject>`;
+      }
     });
 
     svg += `</svg>`;
