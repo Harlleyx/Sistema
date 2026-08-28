@@ -421,11 +421,9 @@
   .track-detail-head h2{ font-size:19px; font-weight:700; margin-top:8px; }
   .track-detail-head p{ color:var(--text-dim); font-size:13px; margin-top:6px; line-height:1.5; }
 
-  /* ---------- Trilha estilo "grafo" (Obsidian) ---------- */
-  .obsidian-graph{ position:relative; width:100%; padding:10px 0 6px; }
-  .obsidian-graph svg{ width:100%; height:auto; display:block; overflow:visible; }
-  .graph-edge{ stroke: var(--border); stroke-width:1.5; transition: stroke .3s; }
-  .graph-edge.done{ stroke: var(--gold-dim); stroke-width:2; }
+  /* ---------- Trilha estilo "mapa de metrô circular" ---------- */
+  .obsidian-graph{ position:relative; width:100%; padding:10px 0 6px; display:flex; justify-content:center; }
+  .obsidian-graph svg{ width:100%; max-width:640px; height:auto; display:block; overflow:visible; }
   .graph-node-halo{
     fill:none; stroke:var(--gold); stroke-width:2; opacity:0.55;
     transform-box: fill-box; transform-origin:center;
@@ -438,24 +436,10 @@
   }
   .graph-node-circle{ cursor:pointer; transition: r .15s ease, filter .15s ease; }
   .graph-node-circle.is-locked{ cursor:not-allowed; }
-  .graph-node-circle.is-done{ filter: drop-shadow(0 0 5px rgba(62,207,142,0.55)); }
-  .graph-node-circle.is-available{ filter: drop-shadow(0 0 6px rgba(232,179,61,0.55)); }
+  .graph-node-circle.is-done{ filter: drop-shadow(0 0 5px rgba(62,207,142,0.45)); }
+  .graph-node-circle.is-available{ filter: drop-shadow(0 0 6px rgba(232,179,61,0.45)); }
   .graph-node-hit{ fill:transparent; cursor:pointer; }
   .graph-node-hit.is-locked{ cursor:not-allowed; }
-  .graph-node-icon{
-    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800;
-    text-anchor:middle; dominant-baseline:central; pointer-events:none;
-  }
-  .graph-node-icon.is-done{ fill:#08170f; }
-  .graph-node-icon.is-available{ fill:#1a1204; }
-  .graph-node-icon.is-locked{ fill: var(--text-dim); }
-  .graph-node-label{
-    width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    text-align:center; font-family:'Inter',sans-serif; font-size:11.5px; line-height:1.3; color:var(--text-dim);
-    pointer-events:none;
-  }
-  .graph-node-label.is-active{ color:var(--text); font-weight:600; }
-  .graph-node-label .g-xp{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--gold); margin-top:2px; }
 
   .lesson-tree{ display:flex; flex-direction:column; align-items:center; padding:6px 0; }
 
@@ -2261,10 +2245,10 @@ const firebaseConfig = {
     });
   }
 
-  // ---- Trilha em estilo grafo (bolinhas conectadas, tipo Obsidian) ----
-  // Gera um layout "orgânico": posição pseudo-aleatória determinística por lição
-  // (mesmo id → sempre a mesma posição), com correção mínima de sobreposição,
-  // pra parecer uma rede real e não uma onda perfeita.
+  // ---- Trilha em estilo "mapa de metrô circular" (inspirado em mapas de metrô radiais) ----
+  // Layout determinístico por trilha (mesmo id → sempre o mesmo desenho): as lições
+  // ficam em espiral partindo do centro (1ª lição) até a borda (última lição), sobre
+  // um fundo com anéis concêntricos e raios, como um mapa de metrô circular.
   function seededRandom(seed){
     let s = 0;
     for(let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
@@ -2272,6 +2256,19 @@ const firebaseConfig = {
       s = (s * 1664525 + 1013904223) >>> 0;
       return s / 4294967296;
     };
+  }
+
+  function polarToXY(cx, cy, r, angleDeg){
+    const rad = (angleDeg - 90) * Math.PI / 180; // 0° = topo (norte)
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  // Gera uma cor "linha de metrô" saturada e determinística a partir do id da trilha
+  function trackLineColor(trackId){
+    let hash = 0;
+    for(let i = 0; i < trackId.length; i++) hash = (hash * 31 + trackId.charCodeAt(i)) >>> 0;
+    const hue = hash % 360;
+    return `hsl(${hue}, 72%, 58%)`;
   }
 
   function renderLessonTree(trackId){
@@ -2295,68 +2292,106 @@ const firebaseConfig = {
       return { ...l, key, isDone, isLocked, isAvailable };
     });
 
-    const W = 400;
-    const spacingY = 118;
-    const topPad = 40;
-    const H = topPad + (states.length - 1) * spacingY + 44;
-    const centerX = W / 2;
-    const maxSpread = Math.min(140, W / 2 - 34);
+    const SIZE = 640;
+    const cx = SIZE / 2, cy = SIZE / 2;
+    const maxR = SIZE / 2 - 46;
     const rnd = seededRandom(trackId);
+    const lineColor = trackLineColor(trackId);
 
-    // posição base: avança em Y, oscila em X com uma curva suave + ruído leve,
-    // como um "caminho" desenhado à mão em vez de uma senoide perfeita
+    let svg = `<svg viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
+
+    // ---- fundo: anéis concêntricos + raios, como um mapa de metrô circular ----
+    svg += `<g class="subway-grid">`;
+    const rings = 8;
+    for(let i = 1; i <= rings; i++){
+      const r = (maxR / rings) * i;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" fill="none" stroke="rgba(125,139,160,0.14)" stroke-width="1" />`;
+    }
+    const spokes = 16;
+    for(let i = 0; i < spokes; i++){
+      const ang = (360 / spokes) * i;
+      const p = polarToXY(cx, cy, maxR, ang);
+      svg += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(125,139,160,0.10)" stroke-width="1" />`;
+    }
+    svg += `</g>`;
+
+    // ---- posições das lições em espiral (jogo de ângulo tipo mapa de metrô) ----
+    const baseAngle = rnd() * 360;
+    const angleStep = 30 + rnd() * 12;
+    const rStep = (maxR - 22) / Math.max(1, states.length - 1);
+    let ang = baseAngle;
     let dir = rnd() > 0.5 ? 1 : -1;
     const pos = states.map((n, idx) => {
-      if(idx > 0 && rnd() > 0.55) dir *= -1; // muda de lado de vez em quando, não sempre
-      const wobble = (rnd() - 0.5) * 30;
-      const t = idx / Math.max(1, states.length - 1);
-      const envelope = 0.55 + 0.45 * Math.sin(t * Math.PI); // menos espalhado nas pontas
-      const x = centerX + dir * maxSpread * envelope * (0.55 + rnd() * 0.45) + wobble;
-      const y = topPad + idx * spacingY + (rnd() - 0.5) * 14;
-      return { ...n, x: Math.min(Math.max(x, 30), W - 30), y };
+      const r = 22 + rStep * idx;
+      if(idx > 0 && rnd() > 0.6) dir *= -1;
+      ang += dir * (angleStep * (0.6 + rnd() * 0.5));
+      const p = polarToXY(cx, cy, r, ang);
+      return { ...n, x: p.x, y: p.y, ang };
     });
 
-    let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
+    // linha (trilho) conectando as lições em ordem, com curvas suaves
+    function buildPath(nodes){
+      let d = `M ${nodes[0].x.toFixed(1)} ${nodes[0].y.toFixed(1)}`;
+      for(let i = 1; i < nodes.length; i++){
+        const a = nodes[i-1], b = nodes[i];
+        d += ` Q ${a.x.toFixed(1)} ${b.y.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+      }
+      return d;
+    }
+    svg += `<path d="${buildPath(pos)}" fill="none" stroke="rgba(125,139,160,0.35)" stroke-width="3" stroke-linecap="round" />`;
 
-    // arestas: curvas suaves (não linhas retas) ligando cada nó ao próximo
-    for(let i = 1; i < pos.length; i++){
-      const a = pos[i - 1], b = pos[i];
-      const midY = (a.y + b.y) / 2;
-      const path = `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} C ${a.x.toFixed(1)} ${midY.toFixed(1)}, ${b.x.toFixed(1)} ${midY.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
-      svg += `<path class="graph-edge${a.isDone ? ' done' : ''}" d="${path}" fill="none" />`;
+    let lastDoneIdx = -1;
+    pos.forEach((n, i) => { if(n.isDone) lastDoneIdx = i; });
+    if(lastDoneIdx >= 0){
+      svg += `<path d="${buildPath(pos.slice(0, lastDoneIdx + 1))}" fill="none" stroke="${lineColor}" stroke-width="3.6" stroke-linecap="round" />`;
     }
 
-    // nós (bolinhas), desenhados por cima das arestas
+    // estação central (início da trilha)
+    svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="${lineColor}" />`;
+
+    // ---- estações (nós) ----
     pos.forEach((n, idx) => {
-      const r = n.isDone ? 13 : (n.isAvailable ? 13 : 9);
+      const rNode = (n.isDone || n.isAvailable) ? 9 : 6;
 
       if(n.isAvailable){
-        svg += `<circle class="graph-node-halo" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" style="--r:${r};" />`;
+        svg += `<circle class="graph-node-halo" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${rNode}" style="stroke:${lineColor};" />`;
       }
 
+      let fill = 'var(--panel-2)', stroke = 'var(--border)';
       let stateClass = 'is-locked';
-      if(n.isDone) stateClass = 'is-done';
-      else if(n.isAvailable) stateClass = 'is-available';
+      if(n.isDone){ fill = lineColor; stroke = '#0a0e14'; stateClass = 'is-done'; }
+      else if(n.isAvailable){ fill = 'var(--panel)'; stroke = lineColor; stateClass = 'is-available'; }
 
-      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" />`;
+      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${rNode}" fill="${fill}" stroke="${stroke}" stroke-width="2" />`;
+
       if(n.isDone){
-        svg += `<text class="graph-node-icon is-done" x="${n.x.toFixed(1)}" y="${(n.y + 0.5).toFixed(1)}">✓</text>`;
+        svg += `<text x="${n.x.toFixed(1)}" y="${(n.y + 3).toFixed(1)}" font-size="9" text-anchor="middle" fill="#0a0e14" font-family="JetBrains Mono, monospace" font-weight="800">✓</text>`;
       } else if(n.isLocked){
-        svg += `<text class="graph-node-icon is-locked" x="${n.x.toFixed(1)}" y="${(n.y + 0.5).toFixed(1)}" font-size="9">🔒</text>`;
+        svg += `<text x="${n.x.toFixed(1)}" y="${(n.y + 3).toFixed(1)}" font-size="8" text-anchor="middle" fill="var(--text-dim)">🔒</text>`;
       }
-      // área de toque maior (facilita clique/toque em mobile)
-      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${Math.max(r, 22)}" />`;
 
-      // rótulo discreto: só título, sem caixinha, cor apagada — feito para não competir com os nós
-      const labelW = 108;
-      const labelX = Math.min(Math.max(n.x - labelW / 2, 2), W - labelW - 2);
-      const showLabel = !n.isLocked;
-      if(showLabel){
-        svg += `<foreignObject x="${labelX.toFixed(1)}" y="${(n.y + r + 5).toFixed(1)}" width="${labelW}" height="30">
-          <div xmlns="http://www.w3.org/1999/xhtml" class="graph-node-label${n.isAvailable ? ' is-active' : ''}">${(n.title || '').replace(/</g,'&lt;')}</div>
-        </foreignObject>`;
+      // área de toque maior (facilita clique/toque em mobile)
+      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="16" />`;
+
+      // rótulo, deslocado radialmente para fora do nó (como os nomes das estações no mapa)
+      if(!n.isLocked){
+        const labelDist = rNode + 13;
+        const rad = (n.ang - 90) * Math.PI / 180;
+        const lx = n.x + Math.cos(rad) * labelDist;
+        const ly = n.y + Math.sin(rad) * labelDist;
+        const anchor = Math.cos(rad) > 0.15 ? 'start' : (Math.cos(rad) < -0.15 ? 'end' : 'middle');
+        const labelColor = n.isAvailable ? 'var(--text)' : 'var(--text-dim)';
+        svg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="10" text-anchor="${anchor}" fill="${labelColor}" font-family="Inter, sans-serif" dominant-baseline="middle">${(n.title || '').replace(/</g,'&lt;')}</text>`;
       }
     });
+
+    // bússola decorativa, como no mapa de referência
+    svg += `
+      <g transform="translate(${SIZE - 44}, 30)" opacity="0.5">
+        <line x1="0" y1="-14" x2="0" y2="14" stroke="var(--text-dim)" stroke-width="1"/>
+        <text x="0" y="-18" font-size="9" text-anchor="middle" fill="var(--text-dim)" font-family="JetBrains Mono, monospace">N</text>
+        <text x="0" y="25" font-size="9" text-anchor="middle" fill="var(--text-dim)" font-family="JetBrains Mono, monospace">S</text>
+      </g>`;
 
     svg += `</svg>`;
 
