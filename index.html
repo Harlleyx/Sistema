@@ -208,6 +208,9 @@
   .guild-row:last-child{ border-bottom:none; }
   .guild-row img{ width:36px; height:36px; border-radius:50%; border:1px solid var(--border); object-fit:cover; }
   .guild-row.me{ box-shadow: inset 0 0 0 1px rgba(232,179,61,0.35); }
+  .guild-row.profile-clickable{ transition:transform .15s, border-color .15s, background-color .15s; }
+  .guild-row.profile-clickable:hover{ transform:translateY(-1px); border-color:var(--gold); }
+  .guild-row.profile-clickable:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   .guild-info{ flex:1; min-width:0; }
   .guild-info .gname{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
   .guild-info .gname .you-tag{ color:var(--gold); font-size:10px; font-family:'JetBrains Mono',monospace; margin-left:2px; }
@@ -2118,7 +2121,20 @@ const firebaseConfig = {
   // ---------- VER PERFIL DE QUALQUER PESSOA ----------
   const viewProfileModal = document.getElementById('view-profile-modal');
 
-  function openProfileView(uid, data){
+  async function openProfileView(uid, data){
+    // O perfil pode ser aberto por qualquer membro da Legião.
+    // Se os dados não vierem da lista, busca o documento atualizado no Firestore.
+    if(!uid) return;
+    if(!data || Object.keys(data).length === 0){
+      try{
+        const snap = await getDoc(doc(db, 'users', uid));
+        if(snap.exists()) data = snap.data();
+      }catch(err){
+        console.error('Erro ao carregar perfil:', err);
+        showToast('Não foi possível carregar este perfil');
+        return;
+      }
+    }
     data = data || {};
     const xp = data.xp || 0;
     const level = levelFromXp(xp);
@@ -2331,9 +2347,12 @@ const firebaseConfig = {
       const avatarSrc = u.customPhotoURL || u.photoURL || '';
 
       const row = document.createElement('div');
-      row.className = 'guild-row' + (isMe ? ' me' : '');
+      row.className = 'guild-row profile-clickable' + (isMe ? ' me' : '');
       row.style.cursor = 'pointer';
-      row.title = 'Ver perfil';
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.setAttribute('aria-label', `Abrir perfil de ${u.customName || u.name || 'Aventureiro'}`);
+      row.title = 'Clique para abrir o perfil';
 
       const noteHtml = u.musicVideoId
         ? `<button class="note-btn" type="button" data-uid="${uid}" data-video="${u.musicVideoId}" title="Tocar/pausar música">♪</button>`
@@ -2350,7 +2369,27 @@ const firebaseConfig = {
         <div class="guild-level mono">Nv.${level}</div>
       `;
       if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.62) 0%, rgba(10,14,20,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
-      row.addEventListener('click', () => openProfileView(uid, u));
+      const openThisProfile = () => openProfileView(uid, u);
+      row.addEventListener('click', openThisProfile);
+      row.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          openThisProfile();
+        }
+      });
+
+      // Avatar e nome também abrem explicitamente o perfil.
+      const avatarEl = row.querySelector('img');
+      const nameEl = row.querySelector('.gname');
+      [avatarEl, nameEl].forEach((el) => {
+        if(!el) return;
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openThisProfile();
+        });
+      });
+
       wrap.appendChild(row);
 
       const noteBtn = row.querySelector('.note-btn');
