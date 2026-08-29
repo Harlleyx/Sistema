@@ -702,6 +702,20 @@
   .admin-color-line input[type=text]{ flex:1; }
   .admin-node-meta{ display:flex; gap:8px; flex-wrap:wrap; color:var(--text-dim); font:10px 'JetBrains Mono',monospace; }
   .admin-node-meta b{ color:var(--text); }
+  .admin-track-lessons{ margin-top:10px; }
+  .admin-track-lessons.open{ padding:14px; background:rgba(255,255,255,.018); border-top:1px solid var(--border); }
+  .admin-track-lessons > .admin-lesson-form{ margin-bottom:14px; }
+  .admin-skill-editor{ background:rgba(0,0,0,.12); border-top:0; padding:0; }
+  .admin-skill-editor + .admin-skill-editor{ margin-top:10px; }
+  .admin-skill-form{ padding:14px; }
+  .admin-skill-form .field{ min-width:0; }
+  .admin-simple-help{ font-size:11px; color:var(--text-dim); line-height:1.5; margin:8px 0 14px; }
+  .admin-node-number{ display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; border-radius:50%; background:rgba(232,179,61,.12); border:1px solid var(--gold-dim); color:var(--gold); font:700 11px 'JetBrains Mono',monospace; margin-right:8px; }
+  .lesson-complete-actions{ display:flex; flex-direction:column; gap:8px; width:100%; }
+  .lesson-complete-btn,.lesson-uncomplete-btn{ width:100%; padding:12px; border-radius:7px; font-weight:800; cursor:pointer; }
+  .lesson-complete-btn{ border:0; }
+  .lesson-uncomplete-btn{ background:transparent; color:var(--text-dim); border:1px solid var(--border); }
+  .lesson-uncomplete-btn:hover{ border-color:var(--danger); color:var(--danger); }
 
   /* Lesson detail modal */
   .lesson-modal-desc{ color:var(--text); font-size:13px; line-height:1.6; margin-bottom:16px; white-space:pre-wrap; }
@@ -725,6 +739,7 @@
 
   .admin-track-item{ flex-direction:column; align-items:stretch; gap:10px; }
   .admin-track-item .admin-track-top{ display:flex; align-items:center; gap:12px; }
+  .admin-track-item .admin-track-top{ cursor:pointer; padding:4px 0; }
   .admin-track-item .admin-track-top .ainfo{ flex:1; min-width:0; cursor:pointer; }
   .admin-track-lessons{ display:none; flex-direction:column; gap:10px; border-top:1px solid var(--border); padding-top:12px; margin-top:2px; }
   .admin-track-lessons.open{ display:flex; }
@@ -945,7 +960,7 @@
         </div>
         <button type="submit" class="btn-save">+ Adicionar trilha</button>
       </form>
-      <p class="admin-skill-help" style="margin-top:-12px;margin-bottom:20px;">Depois de criar a trilha, abra-a abaixo. Cada nó pode ter Nome, Ícone, Descrição, XP, Material, Cor HEX, posição X/Y, pré-requisitos e tipo. As posições são livres e formam a Skill Tree.</p>
+      <p class="admin-simple-help">Crie a trilha e depois cadastre as habilidades na ordem em que elas aparecem no octógono. <b>Os 8 primeiros nós são posicionados automaticamente</b> nos 8 lados do octógono. Você não precisa mexer em X/Y.</p>
 
       <div class="admin-list" id="admin-tracks-list"></div>
     </div>
@@ -3133,43 +3148,83 @@ const firebaseConfig = {
   function openLessonModal(trackId, lesson, isDone, isLocked=false){
     const accent=normalizeHexColor(lesson.color,'#4fd1ff');
     document.getElementById('lesson-modal-title').textContent = `${lesson.icon || '✦'}  ${lesson.title || ''}`;
-    document.getElementById('lesson-modal-xp').textContent = isLocked ? '🔒 Pré-requisitos ainda não concluídos' : `+${lesson.xpValue || 0} XP ao concluir`;
-    document.getElementById('lesson-modal-xp').style.color = accent;
+    document.getElementById('lesson-modal-xp').textContent = isLocked ? '🔒 Pré-requisitos ainda não concluídos' : (isDone ? `✓ Concluída · +${lesson.xpValue || 0} XP` : `+${lesson.xpValue || 0} XP ao concluir`);
+    document.getElementById('lesson-modal-xp').style.color = isDone ? '#3ecf8e' : accent;
     document.getElementById('lesson-modal-desc').textContent = lesson.description || '';
     const linkEl=document.getElementById('lesson-modal-link');
     if(lesson.contentUrl){ linkEl.href=lesson.contentUrl; linkEl.classList.remove('hidden'); } else linkEl.classList.add('hidden');
     const actions=document.getElementById('lesson-modal-actions'); actions.innerHTML='';
-    if(isDone){
-      const tag=document.createElement('div'); tag.className='lesson-modal-done-tag'; tag.style.color=accent; tag.style.borderColor=accent; tag.style.background=`${accent}18`; tag.textContent='✓ Lição concluída'; actions.appendChild(tag);
-    } else if(isLocked){
-      const tag=document.createElement('div'); tag.className='lesson-modal-done-tag'; tag.style.color='#7f8a9b'; tag.style.borderColor='#465064'; tag.style.background='rgba(70,80,100,.12)'; tag.textContent='🔒 Desbloqueie os pré-requisitos para continuar'; actions.appendChild(tag);
+
+    if(isLocked){
+      const tag=document.createElement('div');
+      tag.className='lesson-modal-done-tag';
+      tag.style.color='#7f8a9b'; tag.style.borderColor='#465064'; tag.style.background='rgba(70,80,100,.12)';
+      tag.textContent='🔒 Desbloqueie os pré-requisitos para continuar';
+      actions.appendChild(tag);
+    } else if(isDone){
+      const box=document.createElement('div'); box.className='lesson-complete-actions';
+      const tag=document.createElement('div');
+      tag.className='lesson-modal-done-tag'; tag.style.color='#3ecf8e'; tag.style.borderColor='#3ecf8e'; tag.style.background='rgba(62,207,142,.1)';
+      tag.textContent='✓ Lição concluída'; box.appendChild(tag);
+      const undo=document.createElement('button'); undo.type='button'; undo.className='lesson-uncomplete-btn'; undo.textContent='Desmarcar conclusão';
+      undo.addEventListener('click',()=>uncompleteLesson(trackId,lesson.id,lesson.xpValue||0)); box.appendChild(undo);
+      actions.appendChild(box);
     } else {
-      const btn=document.createElement('button'); btn.type='button'; btn.className='btn-save'; btn.style.cssText=`width:100%;padding:11px;border-radius:7px;border:none;font-weight:700;cursor:pointer;background:${accent};color:#07100b;`;
-      btn.textContent='Concluir lição'; btn.addEventListener('click',()=>completeLesson(trackId,lesson.id,lesson.xpValue||0)); actions.appendChild(btn);
+      const btn=document.createElement('button'); btn.type='button'; btn.className='lesson-complete-btn';
+      btn.style.cssText=`background:${accent};color:#07100b;`;
+      btn.textContent='✓ Marcar como concluída';
+      btn.addEventListener('click',()=>completeLesson(trackId,lesson.id,lesson.xpValue||0));
+      actions.appendChild(btn);
     }
     lessonModal.classList.remove('hidden');
   }
 
   async function completeLesson(trackId, lessonId, xpValue){
     if(!currentUid) return;
-    const key = lessonKey(trackId, lessonId);
-    if(myCompletedLessons().has(key)) return;
+    const key=lessonKey(trackId,lessonId);
+    const existing=myCompletedLessons();
+    if(existing.has(key)) return;
+    const userRef=doc(db,'users',currentUid);
+    try{
+      const snap=await getDoc(userRef);
+      const u=snap.exists() ? (snap.data()||{}) : {};
+      const completed=Array.isArray(u.completedLessons) ? [...u.completedLessons] : [];
+      if(completed.includes(key)) return;
+      const oldXp=Number(u.xp)||0;
+      completed.push(key);
+      await setDoc(userRef,{xp:oldXp+(Number(xpValue)||0),completedLessons:completed},{merge:true});
+      myProfile={...myProfile,xp:oldXp+(Number(xpValue)||0),completedLessons:completed};
+      renderStatus(myProfile); renderTrackGrid(); if(currentOpenTrackId===trackId) renderLessonTree(trackId);
+      lessonModal.classList.add('hidden');
+      showToast(`✓ Lição concluída · +${xpValue} XP`);
+    }catch(err){
+      console.error('Erro ao concluir lição:',err);
+      showToast('Não foi possível marcar a lição. Verifique sua conexão.');
+    }
+  }
 
-    const userRef = doc(db, 'users', currentUid);
-    const userSnap = await getDoc(userRef);
-    const u = userSnap.data() || {};
-    const currentXp = u.xp || 0;
-    const completedLessons = Array.isArray(u.completedLessons) ? u.completedLessons.slice() : [];
-    if(completedLessons.includes(key)) return;
-    completedLessons.push(key);
-
-    await updateDoc(userRef, {
-      xp: currentXp + xpValue,
-      completedLessons
-    });
-
-    showToast(`+${xpValue} XP`);
-    lessonModal.classList.add('hidden');
+  async function uncompleteLesson(trackId, lessonId, xpValue){
+    if(!currentUid) return;
+    const key=lessonKey(trackId,lessonId);
+    const userRef=doc(db,'users',currentUid);
+    try{
+      const snap=await getDoc(userRef);
+      if(!snap.exists()) return;
+      const u=snap.data()||{};
+      const completed=Array.isArray(u.completedLessons) ? [...u.completedLessons] : [];
+      if(!completed.includes(key)) return;
+      const nextCompleted=completed.filter(k=>k!==key);
+      const oldXp=Number(u.xp)||0;
+      const nextXp=Math.max(0,oldXp-(Number(xpValue)||0));
+      await setDoc(userRef,{xp:nextXp,completedLessons:nextCompleted},{merge:true});
+      myProfile={...myProfile,xp:nextXp,completedLessons:nextCompleted};
+      renderStatus(myProfile); renderTrackGrid(); if(currentOpenTrackId===trackId) renderLessonTree(trackId);
+      lessonModal.classList.add('hidden');
+      showToast('↩ Conclusão desmarcada');
+    }catch(err){
+      console.error('Erro ao desmarcar lição:',err);
+      showToast('Não foi possível desmarcar a lição.');
+    }
   }
 
   // ---- Admin: tabs ----
@@ -3207,20 +3262,18 @@ const firebaseConfig = {
     trackDefs.forEach((t)=>{
       const row=document.createElement('div'); row.className='admin-item admin-track-item';
       const top=document.createElement('div'); top.className='admin-track-top';
-      top.innerHTML=`<div class="aicon">${escapeHtml(t.icon||'📘')}</div><div class="ainfo"><div class="atitle">${escapeHtml(t.title||'')}</div><div class="ameta">${escapeHtml(t.description||'')} · clique para gerenciar a Skill Tree</div></div><button class="adel" title="Remover trilha">×</button>`;
+      top.innerHTML=`<div class="aicon">${escapeHtml(t.icon||'📘')}</div><div class="ainfo"><div class="atitle">${escapeHtml(t.title||'')}</div><div class="ameta">${escapeHtml(t.description||'')}</div></div><span style="font:700 11px 'JetBrains Mono',monospace;color:var(--gold)">ABRIR</span><button class="adel" title="Excluir trilha">×</button>`;
       top.querySelector('.ainfo').addEventListener('click',()=>toggleAdminTrackLessons(t.id,row));
       top.querySelector('.adel').addEventListener('click',async(e)=>{e.stopPropagation();try{await deleteDoc(doc(db,'knowledgeTracks',t.id));showToast('Trilha removida');}catch(err){console.error(err);showToast('Não foi possível remover a trilha');}});
       row.appendChild(top);
 
       const lessonsBlock=document.createElement('div'); lessonsBlock.className='admin-track-lessons'; lessonsBlock.dataset.trackId=t.id;
       lessonsBlock.innerHTML=`<form class="admin-lesson-form" data-track-id="${escapeHtml(t.id)}">
-        <div class="row"><input type="text" name="title" placeholder="Nome da habilidade" required maxlength="60" style="flex:2;min-width:180px;"><input type="text" name="icon" placeholder="Ícone ✂️" maxlength="4" style="width:110px;"><input type="number" name="xp" placeholder="XP" required min="1" max="1000" value="10" style="width:80px;"></div>
-        <input type="text" name="description" placeholder="Descrição da habilidade" maxlength="500">
-        <input type="url" name="contentUrl" placeholder="Material / URL (opcional)">
-        <div class="row"><div class="field"><label>Cor do nó</label><div class="admin-color-line"><input type="color" name="colorPicker" value="#4fd1ff"><input type="text" name="color" value="#4fd1ff" maxlength="7" placeholder="#4FD1FF"></div></div><div class="field"><label>Tipo</label><select name="type"><option value="normal">Habilidade</option><option value="branch">Ramo</option><option value="milestone">Marco</option><option value="boss">Especial</option><option value="core">Núcleo</option></select></div></div>
-        <div class="row"><div class="field"><label>Posição X</label><input type="number" name="x" value="0" step="10"></div><div class="field"><label>Posição Y</label><input type="number" name="y" value="0" step="10"></div></div>
-        <div><label style="display:block;font-size:10px;color:var(--text-dim);margin-bottom:4px;font-family:'JetBrains Mono',monospace;">Pré-requisitos</label><select name="prerequisites" multiple></select><div class="admin-skill-help">Selecione uma ou mais habilidades que precisam estar concluídas. Se deixar vazio, o nó nasce diretamente do núcleo.</div></div>
-        <div class="admin-skill-actions"><button class="save" type="submit">+ Criar nó</button></div>
+        <div class="row"><div class="field"><label>Nome da habilidade</label><input type="text" name="title" placeholder="Ex.: Foco" required maxlength="60"></div><div class="field" style="max-width:120px"><label>Ícone</label><input type="text" name="icon" placeholder="🎯" maxlength="4"></div><div class="field" style="max-width:110px"><label>XP</label><input type="number" name="xp" required min="1" max="1000" value="10"></div></div>
+        <div class="field"><label>Descrição</label><input type="text" name="description" placeholder="O que esta habilidade desenvolve?" maxlength="500"></div>
+        <div class="row"><div class="field"><label>Material / URL (opcional)</label><input type="url" name="contentUrl" placeholder="https://..."></div><div class="field" style="max-width:190px"><label>Tipo</label><select name="type"><option value="normal">Habilidade</option><option value="branch">Ramo</option><option value="milestone">Marco</option><option value="boss">Especial</option></select></div></div>
+        <div class="row"><div class="field"><label>Cor</label><div class="admin-color-line"><input type="color" name="colorPicker" value="#4fd1ff"><input type="text" name="color" value="#4fd1ff" maxlength="7" placeholder="#4FD1FF"></div></div><div class="field"><label>Pré-requisito</label><select name="prerequisite"></select><div class="admin-skill-help">Opcional. Escolha a habilidade que precisa ser concluída antes desta.</div></div></div>
+        <div class="admin-skill-actions"><button class="save" type="submit">＋ Adicionar ao octógono</button></div>
       </form><div class="admin-lesson-list"></div>`;
       row.appendChild(lessonsBlock);
       lessonsBlock.querySelector('.admin-lesson-form').addEventListener('submit',(ev)=>addLessonSubmit(ev,t.id));
@@ -3230,12 +3283,6 @@ const firebaseConfig = {
     });
   }
 
-  function fillPrerequisiteSelect(select,lessons,selfId,selected=[]){
-    select.innerHTML='';
-    lessons.filter(l=>l.id!==selfId).forEach(l=>{
-      const opt=document.createElement('option');opt.value=l.id;opt.textContent=`${l.title||'Sem nome'}  [${l.id}]`;opt.selected=selected.includes(l.id);select.appendChild(opt);
-    });
-  }
   function bindColorInputs(form){
     const picker=form.querySelector('[name="colorPicker"]'),text=form.querySelector('[name="color"]');
     picker.addEventListener('input',()=>text.value=picker.value.toUpperCase());
@@ -3249,50 +3296,67 @@ const firebaseConfig = {
   }
 
   async function addLessonSubmit(e,trackId){
-    e.preventDefault();if(!isAdmin)return;
-    const form=e.target,title=form.title.value.trim();if(!title)return;
+    e.preventDefault(); if(!isAdmin) return;
+    const form=e.target, title=form.title.value.trim(); if(!title) return;
     const color=normalizeHexColor(form.color.value,'#4fd1ff');
-    const x=Number(form.x.value)||0,y=Number(form.y.value)||0;
-    const prerequisites=Array.from(form.prerequisites.selectedOptions).map(o=>o.value);
+    const prerequisite=form.prerequisite?.value || '';
     const lessons=lessonsByTrack.get(trackId)||[];
     const newRef=doc(collection(db,'knowledgeTracks',trackId,'lessons'));
-    await setDoc(newRef,{title,icon:form.icon.value.trim()||'✦',xpValue:parseInt(form.xp.value,10)||10,description:form.description.value.trim(),contentUrl:form.contentUrl.value.trim(),color,type:form.type.value||'normal',x,y,prerequisites,order:Date.now()});
-    form.reset();form.x.value=0;form.y.value=0;form.xp.value=10;form.color.value='#4fd1ff';form.colorPicker.value='#4fd1ff';
-    fillPrerequisiteSelect(form.querySelector('[name="prerequisites"]'),lessons);
-    showToast('Nó criado na Skill Tree');
+    const nextIndex=lessons.length;
+    // A posição dos 8 primeiros é automática; X/Y ficam apenas para compatibilidade.
+    await setDoc(newRef,{title,icon:form.icon.value.trim()||'✦',xpValue:parseInt(form.xp.value,10)||10,description:form.description.value.trim(),contentUrl:form.contentUrl.value.trim(),color,type:form.type.value||'normal',x:0,y:0,prerequisites:prerequisite?[prerequisite]:[],order:Date.now()});
+    form.reset(); form.xp.value=10; form.color.value='#4fd1ff'; form.colorPicker.value='#4fd1ff';
+    fillSinglePrerequisiteSelect(form.querySelector('[name="prerequisite"]'),lessons);
+    showToast(`Nó ${nextIndex+1} adicionado`);
+  }
+
+  function fillSinglePrerequisiteSelect(select,lessons,selfId='',selected=''){
+    if(!select) return;
+    select.innerHTML='<option value="">Nenhum — começa pelo núcleo</option>';
+    lessons.filter(l=>l.id!==selfId).forEach(l=>{
+      const opt=document.createElement('option'); opt.value=l.id; opt.textContent=l.title||'Sem nome'; opt.selected=selected===l.id; select.appendChild(opt);
+    });
   }
 
   function renderAdminLessonList(trackId){
-    const block=document.querySelector(`.admin-track-lessons[data-track-id="${trackId}"] .admin-lesson-list`);if(!block)return;
-    const lessons=lessonsByTrack.get(trackId)||[];block.innerHTML='';
+    const block=document.querySelector(`.admin-track-lessons[data-track-id="${trackId}"] .admin-lesson-list`); if(!block) return;
+    const lessons=lessonsByTrack.get(trackId)||[]; block.innerHTML='';
     const addForm=document.querySelector(`.admin-track-lessons[data-track-id="${trackId}"] .admin-lesson-form`);
-    if(addForm) fillPrerequisiteSelect(addForm.querySelector('[name="prerequisites"]'),lessons);
-    if(!lessons.length){block.innerHTML='<p class="empty-note">Nenhum nó ainda. Use o formulário acima para criar o primeiro.</p>';return;}
+    if(addForm) fillSinglePrerequisiteSelect(addForm.querySelector('[name="prerequisite"]'),lessons);
+    if(!lessons.length){ block.innerHTML='<p class="empty-note">Nenhuma habilidade ainda. Use o formulário acima.</p>'; return; }
 
     lessons.forEach((l,idx)=>{
-      const row=document.createElement('div');row.className='admin-skill-editor';
-      const prereqs=normalizePrerequisites(l.prerequisites),color=normalizeHexColor(l.color,'#4fd1ff');
+      const row=document.createElement('div'); row.className='admin-skill-editor';
+      const color=normalizeHexColor(l.color,'#4fd1ff');
+      const prereqs=normalizePrerequisites(l.prerequisites);
+      const prereqId=prereqs[0]||'';
       row.innerHTML=`<form class="admin-skill-form">
-        <div class="row"><div class="field"><label>Nome</label><input name="title" value="${escapeHtml(l.title||'')}" maxlength="60" required></div><div class="field"><label>Ícone</label><input name="icon" value="${escapeHtml(l.icon||'✦')}" maxlength="4"></div><div class="field"><label>XP</label><input name="xp" type="number" min="1" max="1000" value="${Number(l.xpValue)||10}"></div></div>
+        <div style="display:flex;align-items:center;margin-bottom:4px"><span class="admin-node-number">${idx+1}</span><strong style="font-size:13px">${escapeHtml(l.title||'Sem nome')}</strong></div>
+        <div class="row"><div class="field"><label>Nome</label><input name="title" value="${escapeHtml(l.title||'')}" maxlength="60" required></div><div class="field" style="max-width:110px"><label>Ícone</label><input name="icon" value="${escapeHtml(l.icon||'✦')}" maxlength="4"></div><div class="field" style="max-width:100px"><label>XP</label><input name="xp" type="number" min="1" max="1000" value="${Number(l.xpValue)||10}"></div></div>
         <div class="field"><label>Descrição</label><input name="description" value="${escapeHtml(l.description||'')}" maxlength="500"></div>
-        <div class="field"><label>Material</label><input name="contentUrl" type="url" value="${escapeHtml(l.contentUrl||'')}" placeholder="https://..."></div>
-        <div class="row"><div class="field"><label>Cor HEX</label><div class="admin-color-line"><input type="color" name="colorPicker" value="${color}"><input type="text" name="color" value="${color}" maxlength="7"></div></div><div class="field"><label>Tipo</label><select name="type"><option value="normal">Habilidade</option><option value="branch">Ramo</option><option value="milestone">Marco</option><option value="boss">Especial</option><option value="core">Núcleo</option></select></div></div>
-        <div class="row"><div class="field"><label>Posição X</label><input name="x" type="number" step="10" value="${Number.isFinite(Number(l.x))?Number(l.x):getFallbackNodePosition(idx).x}"></div><div class="field"><label>Posição Y</label><input name="y" type="number" step="10" value="${Number.isFinite(Number(l.y))?Number(l.y):getFallbackNodePosition(idx).y}"></div></div>
-        <div><label style="display:block;font-size:10px;color:var(--text-dim);margin-bottom:4px;font-family:'JetBrains Mono',monospace;">Pré-requisitos</label><select name="prerequisites" multiple></select><div class="admin-skill-help">Ctrl + clique para selecionar vários. Nó ${idx+1} · ID: <b>${escapeHtml(l.id)}</b></div></div>
-        <div class="admin-node-meta"><span>Tipo: <b>${escapeHtml(nodeTypeLabel(l.type))}</b></span><span>Cor: <b style="color:${color}">${color}</b></span><span>X: <b>${Number(l.x)||0}</b></span><span>Y: <b>${Number(l.y)||0}</b></span></div>
-        <div class="admin-skill-actions"><button class="save" type="submit">Salvar alterações</button><button class="delete" type="button">Excluir nó</button></div>
+        <div class="row"><div class="field"><label>Material / URL</label><input name="contentUrl" type="url" value="${escapeHtml(l.contentUrl||'')}" placeholder="https://..."></div><div class="field" style="max-width:180px"><label>Tipo</label><select name="type"><option value="normal">Habilidade</option><option value="branch">Ramo</option><option value="milestone">Marco</option><option value="boss">Especial</option></select></div></div>
+        <div class="row"><div class="field"><label>Cor</label><div class="admin-color-line"><input type="color" name="colorPicker" value="${color}"><input type="text" name="color" value="${color}" maxlength="7"></div></div><div class="field"><label>Pré-requisito</label><select name="prerequisite"></select></div></div>
+        <div class="admin-skill-help">${idx<8 ? `Posição automática: <b>${['Topo','Superior direito','Direita','Inferior direito','Baixo','Inferior esquerdo','Esquerda','Superior esquerdo'][idx]}</b>` : 'Nó extra fora do octógono principal.'}</div>
+        <div class="admin-skill-actions"><button class="save" type="submit">✓ Salvar</button><button class="delete" type="button">Excluir</button></div>
       </form>`;
       block.appendChild(row);
-      const form=row.querySelector('form');form.type.value=l.type||'normal';bindColorInputs(form);fillPrerequisiteSelect(form.querySelector('[name="prerequisites"]'),lessons,l.id,prereqs);
+      const form=row.querySelector('form');
+      form.type.value=l.type||'normal'; bindColorInputs(form);
+      fillSinglePrerequisiteSelect(form.querySelector('[name="prerequisite"]'),lessons,l.id,prereqId);
       form.addEventListener('submit',async(ev)=>{
-        ev.preventDefault();if(!isAdmin)return;
-        const updates={title:form.title.value.trim(),icon:form.icon.value.trim()||'✦',xpValue:parseInt(form.xp.value,10)||10,description:form.description.value.trim(),contentUrl:form.contentUrl.value.trim(),color:normalizeHexColor(form.color.value,'#4fd1ff'),type:form.type.value||'normal',x:Number(form.x.value)||0,y:Number(form.y.value)||0,prerequisites:Array.from(form.prerequisites.selectedOptions).map(o=>o.value)};
+        ev.preventDefault(); if(!isAdmin) return;
+        const updates={title:form.title.value.trim(),icon:form.icon.value.trim()||'✦',xpValue:parseInt(form.xp.value,10)||10,description:form.description.value.trim(),contentUrl:form.contentUrl.value.trim(),color:normalizeHexColor(form.color.value,'#4fd1ff'),type:form.type.value||'normal',prerequisites:form.prerequisite.value?[form.prerequisite.value]:[]};
         if(!updates.title){showToast('O nome é obrigatório');return;}
-        try{await updateDoc(doc(db,'knowledgeTracks',trackId,'lessons',l.id),updates);showToast('Nó atualizado');}catch(err){console.error(err);showToast('Não foi possível salvar o nó');}
+        try{await updateDoc(doc(db,'knowledgeTracks',trackId,'lessons',l.id),updates);showToast('✓ Habilidade salva');}catch(err){console.error(err);showToast('Não foi possível salvar');}
       });
-      form.querySelector('.delete').addEventListener('click',async()=>{if(!isAdmin)return;try{await deleteDoc(doc(db,'knowledgeTracks',trackId,'lessons',l.id));showToast('Nó removido');}catch(err){console.error(err);showToast('Não foi possível remover o nó');}});
+      form.querySelector('.delete').addEventListener('click',async()=>{
+        if(!isAdmin) return;
+        if(!confirm(`Excluir a habilidade “${l.title||'Sem nome'}”?`)) return;
+        try{await deleteDoc(doc(db,'knowledgeTracks',trackId,'lessons',l.id));showToast('Habilidade excluída');}catch(err){console.error(err);showToast('Não foi possível excluir');}
+      });
     });
   }
+
 </script>
 
 </body>
