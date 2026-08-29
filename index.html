@@ -2339,38 +2339,23 @@ const firebaseConfig = {
     }
   }
 
-  // ---------- LEGIÃO (amigos) ----------
-  // O clique do perfil usa delegação de eventos no container.
-  // Assim funciona mesmo quando a lista é reconstruída pelo onSnapshot.
-  const guildListEl = document.getElementById('guild-list');
-  if(guildListEl){
-    guildListEl.addEventListener('click', async (e) => {
-      const note = e.target.closest('.note-btn');
-      if(note) return;
-      const row = e.target.closest('.guild-row');
-      if(!row || !row.dataset.uid) return;
-
+  // ---------- CLIQUE PARA ABRIR PERFIL DE QUALQUER MEMBRO ----------
+  // O evento é colocado diretamente em cada linha quando ela é criada.
+  function attachProfileClick(row, uid, data){
+    if(!row || !uid) return;
+    row.addEventListener('click', (e) => {
+      if(e.target.closest('.note-btn')) return;
       e.preventDefault();
-      e.stopPropagation();
-
-      const uid = row.dataset.uid;
-      try{
-        const snap = await getDoc(doc(db, 'users', uid));
-        if(!snap.exists()){
-          showToast('Perfil não encontrado');
-          return;
-        }
-        openProfileView(uid, snap.data());
-      }catch(err){
-        console.error('Erro ao abrir perfil do membro:', err);
-        showToast('Não foi possível abrir este perfil');
+      try {
+        openProfileView(uid, data || {});
+      } catch(err) {
+        console.error('Erro ao abrir perfil:', err);
+        showToast('Erro ao abrir o perfil');
       }
     });
-
-    guildListEl.addEventListener('keydown', (e) => {
+    row.addEventListener('keydown', (e) => {
       if(e.key !== 'Enter' && e.key !== ' ') return;
-      const row = e.target.closest('.guild-row');
-      if(!row || !row.dataset.uid) return;
+      if(e.target.closest('.note-btn')) return;
       e.preventDefault();
       row.click();
     });
@@ -2425,6 +2410,7 @@ const firebaseConfig = {
         <div class="guild-level mono">Nv.${level}</div>
       `;
       if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.62) 0%, rgba(10,14,20,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
+      attachProfileClick(row, uid, u);
       wrap.appendChild(row);
 
       const noteBtn = row.querySelector('.note-btn');
