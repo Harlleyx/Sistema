@@ -774,7 +774,7 @@
       <div class="user-chip">
         <img id="topbar-avatar" src="" alt="" referrerpolicy="no-referrer">
         <span class="name" id="topbar-name"></span>
-        <button class="ghost accent" id="knowledge-link-btn" type="button">🧠 Conhecimento</button>
+        
         <button class="ghost admin-link" id="admin-link-btn" type="button">⚙ Admin</button>
         <button class="ghost" id="logout-btn">Sair</button>
       </div>
@@ -866,9 +866,7 @@
               <h1>Adaptapito</h1>
               <p>Seu espaço de adaptação e acompanhamento.</p>
             </div>
-            <div class="adaptapito-empty">
-              <div><strong>ADAPTAPITO</strong><span>Esta é uma página independente. O conteúdo dela aparece sozinho quando a aba Adaptapito estiver selecionada.</span></div>
-            </div>
+            <div id="adaptapito-mount"></div>
           </div>
         </div>
       </section>
@@ -884,7 +882,7 @@
 
     <div class="admin-tabs">
       <button class="admin-tab-btn active" id="admin-tab-achievements" type="button">🏆 Conquistas</button>
-      <button class="admin-tab-btn" id="admin-tab-knowledge" type="button">🧠 Conhecimento</button>
+      <button class="admin-tab-btn" id="admin-tab-knowledge" type="button">🧩 Adaptapito</button>
     </div>
 
     <div class="admin-section active" id="admin-section-achievements">
@@ -959,8 +957,8 @@
     <div id="knowledge-tracks-view">
       <div class="knowledge-header">
         <div>
-          <h1>Área de Conhecimento</h1>
-          <p class="sub">Trilhas de aprendizado. Complete as lições em ordem para ganhar XP.</p>
+          <h1>Adaptapito</h1>
+          <p class="sub">Seu espaço de aprendizado e evolução. Complete as lições em ordem para ganhar XP.</p>
         </div>
         <button class="ghost" id="knowledge-back-to-dash-btn" type="button">← Voltar</button>
       </div>
@@ -1803,8 +1801,7 @@ const firebaseConfig = {
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('hidden');
       document.getElementById('admin-view').classList.add('hidden');
-      document.getElementById('knowledge-view').classList.add('hidden');
-      document.getElementById('admin-link-btn').classList.remove('show');
+        document.getElementById('admin-link-btn').classList.remove('show');
       return;
     }
 
@@ -1899,6 +1896,15 @@ const firebaseConfig = {
       checkAchievements(myProfile);
     });
 
+    const knowledgeView = document.getElementById('knowledge-view');
+    const adaptapitoMount = document.getElementById('adaptapito-mount');
+    if(knowledgeView && adaptapitoMount && knowledgeView.parentElement !== adaptapitoMount){
+      adaptapitoMount.appendChild(knowledgeView);
+      knowledgeView.classList.remove('hidden');
+      knowledgeView.style.padding = '0';
+      knowledgeView.style.maxWidth = 'none';
+    }
+
     startKnowledgeListeners();
 
     renderRoute();
@@ -1927,26 +1933,16 @@ const firebaseConfig = {
   function renderRoute(){
     const hash = window.location.hash;
     const wantsAdmin = hash === '#admin';
-    const wantsKnowledge = hash === '#knowledge';
     const wantsDashboardTab = hash === '' || DASHBOARD_TABS.includes(hash.slice(1));
 
     document.getElementById('dashboard-view').classList.add('hidden');
     document.getElementById('admin-view').classList.add('hidden');
-    document.getElementById('knowledge-view').classList.add('hidden');
 
     if(wantsAdmin && isAdmin){
       document.getElementById('admin-view').classList.remove('hidden');
       return;
     }
     if(wantsAdmin && !isAdmin){ window.location.hash = ''; return; }
-
-    if(wantsKnowledge && currentUid){
-      currentOpenTrackId = null;
-      document.getElementById('knowledge-track-detail-view').classList.add('hidden');
-      document.getElementById('knowledge-tracks-view').classList.remove('hidden');
-      document.getElementById('knowledge-view').classList.remove('hidden');
-      return;
-    }
 
     if(currentUid && wantsDashboardTab){
       const tab = hash === '' ? 'perfil' : hash.slice(1);
@@ -2624,8 +2620,7 @@ const firebaseConfig = {
   }
 
   // ---- Navegação ----
-  document.getElementById('knowledge-link-btn').addEventListener('click', () => { window.location.hash = '#knowledge'; });
-  document.getElementById('knowledge-back-to-dash-btn').addEventListener('click', () => { window.location.hash = ''; });
+  document.getElementById('knowledge-back-to-dash-btn').addEventListener('click', () => { window.location.hash = '#adaptapito'; });
   document.getElementById('track-detail-back-btn').addEventListener('click', () => {
     currentOpenTrackId = null;
     document.getElementById('knowledge-track-detail-view').classList.add('hidden');
