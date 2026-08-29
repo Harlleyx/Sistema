@@ -2134,6 +2134,10 @@ const firebaseConfig = {
 
   // ---------- VER PERFIL DE QUALQUER PESSOA ----------
   const viewProfileModal = document.getElementById('view-profile-modal');
+  // O modal fica no body para nunca ser limitado por uma aba/overflow do dashboard.
+  if(viewProfileModal && viewProfileModal.parentElement !== document.body){
+    document.body.appendChild(viewProfileModal);
+  }
 
   async function openProfileView(uid, data){
     // O perfil pode ser aberto por qualquer membro da Legião.
@@ -2336,6 +2340,43 @@ const firebaseConfig = {
   }
 
   // ---------- LEGIÃO (amigos) ----------
+  // O clique do perfil usa delegação de eventos no container.
+  // Assim funciona mesmo quando a lista é reconstruída pelo onSnapshot.
+  const guildListEl = document.getElementById('guild-list');
+  if(guildListEl){
+    guildListEl.addEventListener('click', async (e) => {
+      const note = e.target.closest('.note-btn');
+      if(note) return;
+      const row = e.target.closest('.guild-row');
+      if(!row || !row.dataset.uid) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const uid = row.dataset.uid;
+      try{
+        const snap = await getDoc(doc(db, 'users', uid));
+        if(!snap.exists()){
+          showToast('Perfil não encontrado');
+          return;
+        }
+        openProfileView(uid, snap.data());
+      }catch(err){
+        console.error('Erro ao abrir perfil do membro:', err);
+        showToast('Não foi possível abrir este perfil');
+      }
+    });
+
+    guildListEl.addEventListener('keydown', (e) => {
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      const row = e.target.closest('.guild-row');
+      if(!row || !row.dataset.uid) return;
+      e.preventDefault();
+      row.click();
+    });
+  }
+
+  // ---------- LEGIÃO (amigos) ----------
   function renderGuild(gsnap){
     const legionCount = document.getElementById('legion-count');
     if(legionCount) legionCount.textContent = `${gsnap.size} MEMBROS`;
@@ -2362,6 +2403,7 @@ const firebaseConfig = {
 
       const row = document.createElement('div');
       row.className = 'guild-row profile-clickable' + (isMe ? ' me' : '');
+      row.dataset.uid = uid;
       row.style.cursor = 'pointer';
       row.tabIndex = 0;
       row.setAttribute('role', 'button');
@@ -2383,30 +2425,6 @@ const firebaseConfig = {
         <div class="guild-level mono">Nv.${level}</div>
       `;
       if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.62) 0%, rgba(10,14,20,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
-      const openThisProfile = () => openProfileView(uid, u);
-      row.addEventListener('click', (e) => {
-        if(e.target.closest('.note-btn')) return;
-        openThisProfile();
-      });
-      row.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' || e.key === ' '){
-          e.preventDefault();
-          openThisProfile();
-        }
-      });
-
-      // Avatar e nome também abrem explicitamente o perfil.
-      const avatarEl = row.querySelector('img');
-      const nameEl = row.querySelector('.gname');
-      [avatarEl, nameEl].forEach((el) => {
-        if(!el) return;
-        el.style.cursor = 'pointer';
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openThisProfile();
-        });
-      });
-
       wrap.appendChild(row);
 
       const noteBtn = row.querySelector('.note-btn');
