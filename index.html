@@ -2851,18 +2851,19 @@ const firebaseConfig = {
     return [];
   }
   function getFallbackNodePosition(index){
-    // Layout inicial em formato de árvore; depois o admin pode posicionar cada nó livremente.
-    const presets=[
-      {x:0,y:-250},
-      {x:-260,y:-70},{x:260,y:-70},
-      {x:-430,y:140},{x:-140,y:140},{x:140,y:140},{x:430,y:140},
-      {x:-520,y:350},{x:-300,y:350},{x:-80,y:350},{x:160,y:350},{x:390,y:350},
-      {x:-620,y:560},{x:-400,y:560},{x:-180,y:560},{x:60,y:560},{x:300,y:560},{x:520,y:560}
-    ];
-    if(presets[index]) return presets[index];
-    const row=Math.floor((index-1)/6);
-    const col=(index-1)%6;
-    return {x:(col-2.5)*230,y:780+row*220};
+    // Layout padrão da trilha em formato de octógono, como um mapa radial.
+    // Os 8 primeiros nós ficam nos 8 vértices; nós adicionais continuam abaixo.
+    const radius = 430;
+    const octagon = Array.from({length:8},(_,i)=>{
+      const angle = (-90 + i*45) * Math.PI / 180;
+      return {x:Math.round(Math.cos(angle)*radius), y:Math.round(Math.sin(angle)*radius)};
+    });
+    if(octagon[index]) return octagon[index];
+
+    const extra=index-8;
+    const row=Math.floor(extra/6);
+    const col=extra%6;
+    return {x:(col-2.5)*230, y:760+row*220};
   }
   function nodeTypeLabel(type){
     return ({normal:'HABILIDADE',branch:'RAMO',milestone:'MARCO',core:'NÚCLEO',boss:'ESPECIAL'})[type] || 'HABILIDADE';
@@ -2876,6 +2877,9 @@ const firebaseConfig = {
     }
     const midY=(a.y+b.y)/2;
     return `M ${a.x} ${a.y} L ${a.x} ${midY} L ${b.x} ${midY} L ${b.x} ${b.y}`;
+  }
+  function straightPath(a,b){
+    return `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
   }
 
   function renderLessonTree(trackId){
@@ -2920,9 +2924,45 @@ const firebaseConfig = {
     svg+=`<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="url(#microGrid)" opacity=".55"/>`;
     svg+=`<g id="decorative-rings" opacity=".22"><circle cx="${core.x}" cy="${core.y}" r="150" fill="none" stroke="${coreColor}" stroke-width="1"/><circle cx="${core.x}" cy="${core.y}" r="320" fill="none" stroke="rgba(125,139,160,.45)" stroke-width="1"/><circle cx="${core.x}" cy="${core.y}" r="560" fill="none" stroke="rgba(125,139,160,.26)" stroke-width="1"/></g>`;
 
-    // Conexões: cada pré-requisito cria um ramo; sem pré-requisito, o ramo nasce do núcleo.
+    // Conexões no estilo do octógono: 8 raios saem do núcleo e os 8 nós
+    // externos são ligados em sequência, formando o contorno do octógono.
+    // As pré-condições continuam sendo usadas para bloquear/desbloquear nós;
+    // aqui o desenho segue o formato visual pedido.
     svg+=`<g id="skill-edges">`;
-    states.forEach((n)=>{
+
+    const octagonCount=Math.min(8,states.length);
+
+    // Raios: núcleo -> cada vértice.
+    for(let i=0;i<octagonCount;i++){
+      const n=states[i];
+      const a=core;
+      const b=pt(n.x,n.y);
+      const edgeColor=n.isDone?n.color:(n.isAvailable?n.color:'rgba(125,139,160,.38)');
+      const cls=n.isDone?'done':(n.isAvailable?'active':'locked');
+      const d=straightPath(a,b);
+      svg+=`<path class="skill-edge ${cls}" d="${d}" stroke="${edgeColor}" stroke-width="${n.isDone?7:(n.isAvailable?4:2.5)}" opacity="${n.isLocked?.42:.9}"/>`;
+      if(n.isDone){ svg+=`<path d="${d}" fill="none" stroke="${n.color}" stroke-width="2" opacity=".95"/>`; }
+    }
+
+    // Contorno externo: vértice atual -> próximo vértice.
+    if(octagonCount>2){
+      for(let i=0;i<octagonCount;i++){
+        const n=states[i];
+        const next=states[(i+1)%octagonCount];
+        const a=pt(n.x,n.y);
+        const b=pt(next.x,next.y);
+        const locked=n.isLocked || next.isLocked;
+        const done=n.isDone && next.isDone;
+        const edgeColor=done?n.color:(locked?'rgba(125,139,160,.38)':n.color);
+        const cls=done?'done':(locked?'locked':'active');
+        const d=straightPath(a,b);
+        svg+=`<path class="skill-edge ${cls}" d="${d}" stroke="${edgeColor}" stroke-width="${done?7:4}" opacity="${locked?.42:.9}"/>`;
+        if(done){ svg+=`<path d="${d}" fill="none" stroke="${n.color}" stroke-width="2" opacity=".95"/>`; }
+      }
+    }
+
+    // Nós adicionais, se houver, continuam ligados pelas pré-condições.
+    states.slice(octagonCount).forEach((n)=>{
       const prereqs=n.prereqs.length?n.prereqs.filter(id=>byId.has(id)):[];
       const sources=prereqs.length?prereqs.map(id=>states.find(x=>x.id===id)).filter(Boolean):[null];
       sources.forEach((source)=>{
@@ -2930,8 +2970,9 @@ const firebaseConfig = {
         const b=pt(n.x,n.y);
         const edgeColor=n.isDone?n.color:(n.isAvailable?n.color:'rgba(125,139,160,.38)');
         const cls=n.isDone?'done':(n.isAvailable?'active':'locked');
-        svg+=`<path class="skill-edge ${cls}" d="${orthogonalPath(a,b)}" stroke="${edgeColor}" stroke-width="${n.isDone?7:(n.isAvailable?4:2.5)}" opacity="${n.isLocked?.42:.9}"/>`;
-        if(n.isDone){ svg+=`<path d="${orthogonalPath(a,b)}" fill="none" stroke="${n.color}" stroke-width="2" opacity=".95"/>`; }
+        const d=orthogonalPath(a,b);
+        svg+=`<path class="skill-edge ${cls}" d="${d}" stroke="${edgeColor}" stroke-width="${n.isDone?7:(n.isAvailable?4:2.5)}" opacity="${n.isLocked?.42:.9}"/>`;
+        if(n.isDone){ svg+=`<path d="${d}" fill="none" stroke="${n.color}" stroke-width="2" opacity=".95"/>`; }
       });
     });
     svg+=`</g>`;
