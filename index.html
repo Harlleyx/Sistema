@@ -1870,9 +1870,23 @@ const firebaseConfig = {
       checkAchievements(myProfile);
     });
 
-    const guildQuery = query(collection(db, 'users'), orderBy('xp', 'desc'));
-    guildUnsub = onSnapshot(guildQuery, (gsnap) => {
-      renderGuild(gsnap);
+    // LEGIÃO: lê os perfis dos usuários autenticados e ordena no cliente.
+    // Isso evita depender de índice do Firestore para orderBy('xp') e deixa
+    // o clique no perfil funcionar mesmo quando algum usuário não possui XP.
+    const usersCol = collection(db, 'users');
+    guildUnsub = onSnapshot(usersCol, (gsnap) => {
+      const docs = [];
+      gsnap.forEach((docSnap) => docs.push(docSnap));
+      docs.sort((a, b) => (Number(b.data()?.xp) || 0) - (Number(a.data()?.xp) || 0));
+      renderGuild({
+        empty: docs.length === 0,
+        size: docs.length,
+        forEach: (callback) => docs.forEach(callback)
+      });
+    }, (err) => {
+      console.error('Erro ao carregar a Legião:', err);
+      const list = document.getElementById('guild-list');
+      if(list) list.innerHTML = '<p class="empty-note">Não foi possível carregar a Legião. Verifique o login e as regras do Firestore.</p>';
     });
 
     const achievementsColRef = collection(db, 'achievements');
@@ -2370,7 +2384,10 @@ const firebaseConfig = {
       `;
       if(u.bannerURL){ safeSetBackground(row, u.bannerURL, 'linear-gradient(90deg, rgba(10,14,20,0.62) 0%, rgba(10,14,20,0.22) 100%)', u.bannerPosX, u.bannerPosY); }
       const openThisProfile = () => openProfileView(uid, u);
-      row.addEventListener('click', openThisProfile);
+      row.addEventListener('click', (e) => {
+        if(e.target.closest('.note-btn')) return;
+        openThisProfile();
+      });
       row.addEventListener('keydown', (e) => {
         if(e.key === 'Enter' || e.key === ' '){
           e.preventDefault();
