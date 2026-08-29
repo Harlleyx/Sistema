@@ -2172,7 +2172,10 @@ const firebaseConfig = {
     const streak = data.streak || 0;
     document.getElementById('view-profile-streak-num').textContent = streak;
     document.getElementById('view-profile-stat-streak').textContent = streak;
-    document.getElementById('view-profile-streak-chip').classList.toggle('show', streak > 0);
+    const streakChip = document.getElementById('view-profile-streak-chip');
+    if(streakChip){
+      streakChip.classList.toggle('show', streak > 0);
+    }
 
     const noteBtn = document.getElementById('view-profile-note-btn');
     if(data.musicVideoId){
