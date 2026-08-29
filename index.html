@@ -423,35 +423,18 @@
 
   /* ---------- Trilha estilo "mapa de metrô circular" (com zoom/pan) ---------- */
   .obsidian-graph-viewport{
-    position:relative; width:100%; max-width:640px; margin:0 auto;
-    height:560px; max-height:70vh;
-    border:1px solid var(--border); border-radius:12px;
-    background: radial-gradient(circle at 50% 45%, rgba(232,179,61,0.04), transparent 60%);
+    position:relative; width:100%; max-width:760px; margin:0 auto;
+    height:640px; max-height:78vh;
+    border:none; border-radius:0; background:transparent;
     overflow:hidden; touch-action:none; cursor:grab;
   }
   .obsidian-graph-viewport.grabbing{ cursor:grabbing; }
   .obsidian-graph-canvas{
-    position:absolute; top:0; left:0; width:640px; height:640px;
+    position:absolute; top:0; left:0;
     transform-origin: 0 0;
     will-change: transform;
   }
   .obsidian-graph-canvas svg{ display:block; width:100%; height:100%; overflow:visible; }
-  .graph-zoom-controls{
-    position:absolute; right:10px; bottom:10px; z-index:5;
-    display:flex; flex-direction:column; gap:6px;
-  }
-  .graph-zoom-controls button{
-    width:32px; height:32px; border-radius:7px; border:1px solid var(--border);
-    background:rgba(16,22,31,0.9); color:var(--text); font-size:16px; font-weight:700; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; line-height:1; backdrop-filter: blur(4px);
-  }
-  .graph-zoom-controls button:hover{ border-color:var(--gold); color:var(--gold); }
-  .graph-zoom-hint{
-    position:absolute; left:10px; bottom:10px; z-index:5;
-    font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-dim);
-    background:rgba(16,22,31,0.75); padding:5px 8px; border-radius:6px; border:1px solid var(--border);
-    pointer-events:none;
-  }
   .graph-node-halo{
     fill:none; stroke:var(--gold); stroke-width:2; opacity:0.55;
     transform-box: fill-box; transform-origin:center;
@@ -2273,15 +2256,13 @@ const firebaseConfig = {
     });
   }
 
-  // ---- Trilha em estilo "mapa de metrô circular" (inspirado em mapas de metrô radiais) ----
-  // Layout determinístico por trilha (mesmo id → sempre o mesmo desenho): as lições
-  // ficam em espiral partindo do centro (1ª lição) até a borda (última lição), sobre
-  // um fundo com anéis concêntricos e raios, como um mapa de metrô circular.
-  //
-  // A espiral usa raio e ângulo SEMPRE crescendo na mesma direção (espiral de
-  // Arquimedes), então o "trilho" nunca cruza ou se sobrepõe a si mesmo — ao
-  // contrário da versão anterior, que virava de direção aleatoriamente e por
-  // isso embaralhava os nós.
+  // ---- Trilha em estilo "mapa de metrô" ----
+  // Contorno geral aproximadamente circular/oval, mas a rede interna é montada
+  // como rotas de metrô reais: segmentos horizontais, verticais e diagonais de
+  // 45°, com cotovelos (elbows) em vez de curvas suaves. Nada de coordenadas
+  // polares para posicionar estações em círculos concêntricos — os pontos-âncora
+  // de cada rota são sorteados dentro de um disco (rejeição), e as rotas entre
+  // âncoras são sempre angulares.
   function seededRandom(seed){
     let s = 0;
     for(let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
@@ -2291,17 +2272,134 @@ const firebaseConfig = {
     };
   }
 
-  function polarToXY(cx, cy, r, angleDeg){
-    const rad = (angleDeg - 90) * Math.PI / 180; // 0° = topo (norte)
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  }
-
-  // Gera uma cor "linha de metrô" saturada e determinística a partir do id da trilha
-  function trackLineColor(trackId){
+  // Gera uma cor "linha de metrô" saturada e determinística a partir de uma seed
+  function trackLineColor(seed){
     let hash = 0;
-    for(let i = 0; i < trackId.length; i++) hash = (hash * 31 + trackId.charCodeAt(i)) >>> 0;
+    for(let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
     const hue = hash % 360;
     return `hsl(${hue}, 72%, 58%)`;
+  }
+
+  // Ponto aleatório dentro de um disco de raio `radius` centrado em (cx,cy),
+  // com viés opcional para um quadrante específico (0=sup-esq,1=sup-dir,2=inf-dir,3=inf-esq)
+  function randomPointInDisc(rnd, cx, cy, radius, quadrant){
+    let x = 0, y = 0, tries = 0;
+    do{
+      let rx = rnd() * 2 - 1;
+      let ry = rnd() * 2 - 1;
+      if(quadrant !== undefined && quadrant !== null){
+        rx = (quadrant === 0 || quadrant === 3) ? -Math.abs(rx) : Math.abs(rx);
+        ry = (quadrant === 0 || quadrant === 1) ? -Math.abs(ry) : Math.abs(ry);
+      }
+      x = cx + rx * radius;
+      y = cy + ry * radius;
+      tries++;
+    } while(Math.hypot(x - cx, y - cy) > radius * 0.94 && tries < 30);
+    return { x, y };
+  }
+
+  // Rota "cotovelo" entre dois pontos: um trecho diagonal de 45° (cobrindo o
+  // menor delta entre x e y) e um trecho reto no eixo dominante — na ordem
+  // sorteada (diagonal-depois-reto ou reto-depois-diagonal), exatamente como
+  // as curvas de um mapa de metrô real.
+  function elbowRoute(from, to, rnd){
+    const dx = to.x - from.x, dy = to.y - from.y;
+    const sx = dx === 0 ? 0 : Math.sign(dx);
+    const sy = dy === 0 ? 0 : Math.sign(dy);
+    const diag = Math.min(Math.abs(dx), Math.abs(dy));
+    const pts = [];
+    if(rnd() > 0.5){
+      pts.push({ x: from.x + diag * sx, y: from.y + diag * sy });
+      pts.push({ x: to.x, y: to.y });
+    } else {
+      if(Math.abs(dx) > Math.abs(dy)){
+        pts.push({ x: to.x - diag * sx, y: from.y });
+      } else {
+        pts.push({ x: from.x, y: to.y - diag * sy });
+      }
+      pts.push({ x: to.x, y: to.y });
+    }
+    return pts;
+  }
+
+  // Constrói uma rota inteira como uma sequência de âncoras (distribuídas por
+  // quadrantes diferentes, para cobrir toda a área) ligadas por trechos em
+  // cotovelo. Retorna a lista completa de waypoints (âncoras + cotovelos).
+  function buildMetroRoute(cx, cy, boundaryR, anchorCount, rnd){
+    const quadOrder = [0, 1, 2, 3];
+    for(let i = quadOrder.length - 1; i > 0; i--){
+      const j = Math.floor(rnd() * (i + 1));
+      const tmp = quadOrder[i]; quadOrder[i] = quadOrder[j]; quadOrder[j] = tmp;
+    }
+    const anchors = [];
+    for(let i = 0; i < anchorCount; i++){
+      const quad = quadOrder[i % 4];
+      anchors.push(randomPointInDisc(rnd, cx, cy, boundaryR, quad));
+    }
+    let waypoints = [anchors[0]];
+    for(let i = 1; i < anchors.length; i++){
+      const seg = elbowRoute(waypoints[waypoints.length - 1], anchors[i], rnd);
+      waypoints = waypoints.concat(seg);
+    }
+    return waypoints;
+  }
+
+  function pathD(pts){
+    if(!pts.length) return '';
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for(let i = 1; i < pts.length; i++){ d += ` L ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`; }
+    return d;
+  }
+
+  // Amostra pontos ao longo de uma polilinha em frações de comprimento de arco
+  // (0 = início, 1 = fim), usados para posicionar as estações sobre a rota.
+  function pointsAtArcFractions(waypoints, fractions){
+    const segLens = [];
+    let total = 0;
+    for(let i = 1; i < waypoints.length; i++){
+      const d = Math.hypot(waypoints[i].x - waypoints[i-1].x, waypoints[i].y - waypoints[i-1].y);
+      segLens.push(d);
+      total += d;
+    }
+    return fractions.map((f) => {
+      const target = f * total;
+      let acc = 0;
+      for(let i = 0; i < segLens.length; i++){
+        if(acc + segLens[i] >= target || i === segLens.length - 1){
+          const segT = segLens[i] === 0 ? 0 : Math.min(1, Math.max(0, (target - acc) / segLens[i]));
+          const a = waypoints[i], b = waypoints[i+1];
+          return { x: a.x + (b.x - a.x) * segT, y: a.y + (b.y - a.y) * segT };
+        }
+        acc += segLens[i];
+      }
+      return waypoints[waypoints.length - 1];
+    });
+  }
+
+  // Recorta os waypoints de uma rota até uma fração de comprimento de arco
+  // (usado para desenhar o trecho já "percorrido" da linha principal).
+  function trimWaypointsToFraction(waypoints, frac){
+    const segLens = [];
+    let total = 0;
+    for(let i = 1; i < waypoints.length; i++){
+      const d = Math.hypot(waypoints[i].x - waypoints[i-1].x, waypoints[i].y - waypoints[i-1].y);
+      segLens.push(d);
+      total += d;
+    }
+    const target = frac * total;
+    let acc = 0;
+    const result = [waypoints[0]];
+    for(let i = 0; i < segLens.length; i++){
+      if(acc + segLens[i] >= target){
+        const segT = segLens[i] === 0 ? 0 : (target - acc) / segLens[i];
+        const a = waypoints[i], b = waypoints[i+1];
+        result.push({ x: a.x + (b.x - a.x) * segT, y: a.y + (b.y - a.y) * segT });
+        return result;
+      }
+      acc += segLens[i];
+      result.push(waypoints[i+1]);
+    }
+    return result;
   }
 
   // ---------- ZOOM / PAN do mapa da trilha ----------
@@ -2438,77 +2536,76 @@ const firebaseConfig = {
       return { ...l, key, isDone, isLocked, isAvailable };
     });
 
-    const SIZE = 640;
+    const SIZE = 800;
     const cx = SIZE / 2, cy = SIZE / 2;
-    const maxR = SIZE / 2 - 60;
+    const boundaryR = SIZE / 2 - 54; // massa geral do mapa fica dentro deste disco
     const rnd = seededRandom(trackId);
     const lineColor = trackLineColor(trackId);
 
-    let svg = `<svg viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
+    // ---- linha principal: rota angular (cotovelos) que atravessa todos os
+    // quadrantes do mapa, carregando as estações reais em ordem ----
+    const anchorCount = Math.max(5, Math.ceil(states.length / 1.4) + 3);
+    const mainWaypoints = buildMetroRoute(cx, cy, boundaryR, anchorCount, rnd);
+    const fractions = states.map((_, i) => states.length === 1 ? 0.5 : 0.04 + (i / (states.length - 1)) * 0.92);
+    const stationPts = pointsAtArcFractions(mainWaypoints, fractions);
 
-    // ---- fundo: anéis concêntricos + raios, como um mapa de metrô circular ----
-    svg += `<g class="subway-grid">`;
-    const rings = 8;
-    for(let i = 1; i <= rings; i++){
-      const r = (maxR / rings) * i;
-      svg += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" fill="none" stroke="rgba(125,139,160,0.14)" stroke-width="1" />`;
-    }
-    const spokes = 16;
-    for(let i = 0; i < spokes; i++){
-      const ang = (360 / spokes) * i;
-      const p = polarToXY(cx, cy, maxR, ang);
-      svg += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(125,139,160,0.10)" stroke-width="1" />`;
-    }
-    svg += `</g>`;
-
-    // ---- posições das lições em espiral (raio e ângulo sempre crescendo) ----
-    // Espiral de Arquimedes: r cresce linearmente com o índice, ângulo cresce
-    // sempre na mesma direção (ângulo dourado ~137.5° dá um espaçamento visual
-    // agradável sem sobreposição, mesmo em trilhas com muitas lições).
-    const baseAngle = rnd() * 360;
-    const goldenAngle = 137.508; // graus
-    // menos lições -> mais graus por passo, para não ficarem grudadas perto do centro
-    const angleStep = lessons.length <= 6 ? 62 : goldenAngle;
-    const rStart = 30;
-    const rStep = (maxR - rStart) / Math.max(1, states.length - 1);
-
-    const pos = states.map((n, idx) => {
-      const r = rStart + rStep * idx;
-      const ang = baseAngle + angleStep * idx;
-      const p = polarToXY(cx, cy, r, ang);
-      return { ...n, x: p.x, y: p.y, ang };
+    // ---- linhas decorativas: outras "linhas de metrô" da mesma trilha, sem
+    // estações reais, só para dar densidade e sensação de rede ----
+    const decoStyles = [
+      { color: 'rgba(125,139,160,0.42)', width: 3 },
+      { color: 'rgba(125,139,160,0.26)', width: 2.5 }
+    ];
+    const decoLines = decoStyles.map((_, i) => {
+      const drnd = seededRandom(trackId + '::deco' + i);
+      const dAnchors = Math.max(3, Math.floor(anchorCount * 0.65));
+      return buildMetroRoute(cx, cy, boundaryR, dAnchors, drnd);
     });
 
-    // linha (trilho) conectando as lições em ordem, com curvas suaves (sem
-    // cruzar, pois cada ponto está estritamente mais longe do centro que o anterior)
-    function buildPath(nodes){
-      if(nodes.length === 1) return `M ${nodes[0].x.toFixed(1)} ${nodes[0].y.toFixed(1)}`;
-      let d = `M ${nodes[0].x.toFixed(1)} ${nodes[0].y.toFixed(1)}`;
-      for(let i = 1; i < nodes.length; i++){
-        const a = nodes[i-1], b = nodes[i];
-        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-        d += ` Q ${a.x.toFixed(1)} ${a.y.toFixed(1)}, ${mx.toFixed(1)} ${my.toFixed(1)}`;
-        d += ` Q ${b.x.toFixed(1)} ${b.y.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
-      }
-      return d;
+    // ---- pequenos ramais decorativos saindo da linha principal ----
+    const stubRnd = seededRandom(trackId + '::stubs');
+    const stubCount = Math.min(5, Math.max(2, Math.floor(states.length / 2)));
+    const branchStubs = [];
+    for(let s = 0; s < stubCount; s++){
+      const segIdx = Math.floor(stubRnd() * (mainWaypoints.length - 1));
+      const base = mainWaypoints[segIdx];
+      const ang = stubRnd() * 360 * Math.PI / 180;
+      const len = SIZE * 0.05 + stubRnd() * SIZE * 0.07;
+      const end = { x: base.x + Math.cos(ang) * len, y: base.y + Math.sin(ang) * len };
+      branchStubs.push([base].concat(elbowRoute(base, end, stubRnd)));
     }
-    svg += `<path d="${buildPath(pos)}" fill="none" stroke="rgba(125,139,160,0.35)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+
+    let svg = `<svg viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
+
+    // linhas decorativas (atrás de tudo)
+    decoLines.forEach((wp, i) => {
+      const st = decoStyles[i % decoStyles.length];
+      svg += `<path d="${pathD(wp)}" fill="none" stroke="${st.color}" stroke-width="${st.width}" stroke-linecap="round" stroke-linejoin="round" />`;
+    });
+
+    // ramais curtos, cada um terminando num pequeno nó decorativo
+    branchStubs.forEach((wp) => {
+      svg += `<path d="${pathD(wp)}" fill="none" stroke="rgba(125,139,160,0.32)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />`;
+      const tip = wp[wp.length - 1];
+      svg += `<circle cx="${tip.x.toFixed(1)}" cy="${tip.y.toFixed(1)}" r="3.5" fill="var(--panel-2)" stroke="rgba(125,139,160,0.5)" stroke-width="1.5" />`;
+    });
+
+    // linha principal (base apagada + trecho já percorrido em destaque)
+    svg += `<path d="${pathD(mainWaypoints)}" fill="none" stroke="rgba(125,139,160,0.38)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />`;
 
     let lastDoneIdx = -1;
-    pos.forEach((n, i) => { if(n.isDone) lastDoneIdx = i; });
+    states.forEach((n, i) => { if(n.isDone) lastDoneIdx = i; });
     if(lastDoneIdx >= 0){
-      svg += `<path d="${buildPath(pos.slice(0, lastDoneIdx + 1))}" fill="none" stroke="${lineColor}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />`;
+      const trimmed = trimWaypointsToFraction(mainWaypoints, fractions[lastDoneIdx]);
+      svg += `<path d="${pathD(trimmed)}" fill="none" stroke="${lineColor}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />`;
     }
 
-    // estação central (início da trilha)
-    svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="${lineColor}" />`;
-
-    // ---- estações (nós) ----
-    pos.forEach((n, idx) => {
+    // ---- estações (nós) sobre a linha principal ----
+    stationPts.forEach((p, idx) => {
+      const n = states[idx];
       const rNode = (n.isDone || n.isAvailable) ? 9 : 6;
 
       if(n.isAvailable){
-        svg += `<circle class="graph-node-halo" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${rNode}" style="stroke:${lineColor};" />`;
+        svg += `<circle class="graph-node-halo" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${rNode}" style="stroke:${lineColor};" />`;
       }
 
       let fill = 'var(--panel-2)', stroke = 'var(--border)';
@@ -2516,62 +2613,42 @@ const firebaseConfig = {
       if(n.isDone){ fill = lineColor; stroke = '#0a0e14'; stateClass = 'is-done'; }
       else if(n.isAvailable){ fill = 'var(--panel)'; stroke = lineColor; stateClass = 'is-available'; }
 
-      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${rNode}" fill="${fill}" stroke="${stroke}" stroke-width="2" />`;
+      svg += `<circle class="graph-node-circle ${stateClass}" data-idx="${idx}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${rNode}" fill="${fill}" stroke="${stroke}" stroke-width="2" />`;
 
       if(n.isDone){
-        svg += `<text x="${n.x.toFixed(1)}" y="${(n.y + 3).toFixed(1)}" font-size="9" text-anchor="middle" fill="#0a0e14" font-family="JetBrains Mono, monospace" font-weight="800">✓</text>`;
+        svg += `<text x="${p.x.toFixed(1)}" y="${(p.y + 3).toFixed(1)}" font-size="9" text-anchor="middle" fill="#0a0e14" font-family="JetBrains Mono, monospace" font-weight="800">✓</text>`;
       } else if(n.isLocked){
-        svg += `<text x="${n.x.toFixed(1)}" y="${(n.y + 3).toFixed(1)}" font-size="8" text-anchor="middle" fill="var(--text-dim)">🔒</text>`;
+        svg += `<text x="${p.x.toFixed(1)}" y="${(p.y + 3).toFixed(1)}" font-size="8" text-anchor="middle" fill="var(--text-dim)">🔒</text>`;
       }
 
       // área de toque maior (facilita clique/toque em mobile)
-      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="16" />`;
+      svg += `<circle class="graph-node-hit ${n.isLocked ? 'is-locked' : ''}" data-idx="${idx}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="16" />`;
 
-      // rótulo, deslocado radialmente para fora do nó (como os nomes das estações no mapa)
+      // rótulo, alternando de lado para reduzir sobreposição entre estações vizinhas
       if(!n.isLocked){
-        const labelDist = rNode + 13;
-        const rad = (n.ang - 90) * Math.PI / 180;
-        const lx = n.x + Math.cos(rad) * labelDist;
-        const ly = n.y + Math.sin(rad) * labelDist;
-        const anchor = Math.cos(rad) > 0.15 ? 'start' : (Math.cos(rad) < -0.15 ? 'end' : 'middle');
+        const labelDx = (idx % 2 === 0) ? (rNode + 9) : -(rNode + 9);
+        const anchor = labelDx > 0 ? 'start' : 'end';
         const labelColor = n.isAvailable ? 'var(--text)' : 'var(--text-dim)';
         const safeTitle = (n.title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        svg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="11" text-anchor="${anchor}" fill="${labelColor}" font-family="Inter, sans-serif" dominant-baseline="middle">${safeTitle}</text>`;
+        svg += `<text x="${(p.x + labelDx).toFixed(1)}" y="${(p.y + 4).toFixed(1)}" font-size="11" text-anchor="${anchor}" fill="${labelColor}" font-family="Inter, sans-serif">${safeTitle}</text>`;
       }
     });
-
-    // bússola decorativa, como no mapa de referência
-    svg += `
-      <g transform="translate(${SIZE - 44}, 30)" opacity="0.5">
-        <line x1="0" y1="-14" x2="0" y2="14" stroke="var(--text-dim)" stroke-width="1"/>
-        <text x="0" y="-18" font-size="9" text-anchor="middle" fill="var(--text-dim)" font-family="JetBrains Mono, monospace">N</text>
-        <text x="0" y="25" font-size="9" text-anchor="middle" fill="var(--text-dim)" font-family="JetBrains Mono, monospace">S</text>
-      </g>`;
 
     svg += `</svg>`;
 
     wrap.innerHTML = `
       <div class="obsidian-graph-viewport" id="graph-viewport">
         <div class="obsidian-graph-canvas" id="graph-canvas" style="width:${SIZE}px;height:${SIZE}px;">${svg}</div>
-        <div class="graph-zoom-controls">
-          <button type="button" id="graph-zoom-in" title="Aumentar zoom">+</button>
-          <button type="button" id="graph-zoom-out" title="Diminuir zoom">−</button>
-          <button type="button" id="graph-zoom-reset" title="Centralizar">⤾</button>
-        </div>
-        <div class="graph-zoom-hint">Arraste para mover · role/pinça para zoom</div>
       </div>`;
 
     const viewportEl = document.getElementById('graph-viewport');
     const canvasEl = document.getElementById('graph-canvas');
-    const zoomCtl = setupGraphPanZoom(viewportEl, canvasEl, SIZE);
-    document.getElementById('graph-zoom-in').addEventListener('click', zoomCtl.zoomIn);
-    document.getElementById('graph-zoom-out').addEventListener('click', zoomCtl.zoomOut);
-    document.getElementById('graph-zoom-reset').addEventListener('click', zoomCtl.reset);
+    setupGraphPanZoom(viewportEl, canvasEl, SIZE);
 
     wrap.querySelectorAll('.graph-node-hit:not(.is-locked)').forEach((hit) => {
       hit.addEventListener('click', () => {
         const idx = parseInt(hit.dataset.idx, 10);
-        const n = pos[idx];
+        const n = states[idx];
         openLessonModal(trackId, n, n.isDone);
       });
     });
