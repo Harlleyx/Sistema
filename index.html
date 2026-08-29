@@ -343,10 +343,103 @@
   .achievements-grid.compact .ach-desc{ font-size:9.5px; margin-top:3px; }
   .ach-mystery .ach-title, .ach-mystery .ach-desc{ color: var(--text-dim); }
 
+  /* ---------- Navegação principal em abas ---------- */
+  .dashboard-nav{
+    width:100%;
+    max-width:1040px;
+    margin:0 auto;
+    padding:14px 20px 0;
+    display:flex;
+    justify-content:center;
+  }
+  .dashboard-tabs{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    width:100%;
+    max-width:620px;
+    padding:5px;
+    background:rgba(16,22,31,.78);
+    border:1px solid var(--border);
+    border-radius:9px;
+  }
+  .dashboard-tab-btn{
+    flex:1;
+    min-width:0;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--text-dim);
+    padding:10px 14px;
+    border-radius:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:1.4px;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .dashboard-tab-btn:hover{
+    color:var(--text);
+    border-color:var(--border);
+    background:rgba(20,28,40,.65);
+  }
+  .dashboard-tab-btn.active{
+    color:var(--gold);
+    border-color:var(--gold);
+    background:rgba(232,179,61,.08);
+    box-shadow:0 0 16px rgba(232,179,61,.08);
+  }
+  .dashboard-tab-content{ display:none; }
+  .dashboard-tab-content.active{ display:block; }
+  .dashboard-tab-content > .panel:first-child{ margin-top:0; }
+
   /* ---------- Coluna direita (guilda/conquistas) ---------- */
   #right-column{ display:flex; flex-direction:column; gap:22px; min-height:100%; }
   #side-default{ display:flex; flex-direction:column; gap:22px; }
   #achievements-panel-box{ flex:1; display:flex; flex-direction:column; }
+
+  .legion-layout{
+    max-width:1040px;
+    margin:0 auto;
+  }
+  .legion-panel .guild-rows-wrap{
+    max-height:650px;
+    overflow:auto;
+  }
+  .adaptapito-panel{
+    max-width:1040px;
+    margin:0 auto;
+  }
+  .adaptapito-content{
+    min-height:360px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:50px 20px;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    background:rgba(20,28,40,.35);
+  }
+  .adaptapito-content strong{
+    display:block;
+    color:var(--gold);
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    letter-spacing:3px;
+    margin-bottom:8px;
+  }
+  .adaptapito-content span{
+    color:var(--text-dim);
+    font-size:12px;
+    line-height:1.5;
+  }
+  @media (max-width:600px){
+    .dashboard-nav{ padding-left:12px; padding-right:12px; }
+    .dashboard-tab-btn{ padding:9px 6px; font-size:10px; letter-spacing:.8px; }
+  }
 
   /* ---------- Admin ---------- */
   .admin-link{ display:none; }
@@ -587,52 +680,84 @@
       </div>
     </header>
 
+    <div class="dashboard-nav">
+      <nav class="dashboard-tabs" aria-label="Navegação principal">
+        <button class="dashboard-tab-btn active" id="dashboard-tab-profile-btn" type="button">Perfil</button>
+        <button class="dashboard-tab-btn" id="dashboard-tab-legion-btn" type="button">Legião</button>
+        <button class="dashboard-tab-btn" id="dashboard-tab-adaptapito-btn" type="button">Adaptapito</button>
+      </nav>
+    </div>
+
     <main>
-      <div class="grid">
-        <!-- LEFT: status + quests -->
-        <div style="display:flex; flex-direction:column; gap:22px;">
-          <div class="panel status-card" id="status-card">
-            <div class="status-banner" id="status-banner"></div>
-            <div class="avatar-ring" id="avatar-ring"><img id="status-avatar" src="" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''"></div>
-            <div class="name" id="status-name">
-              <span id="status-name-text"></span>
-              <button class="note-btn hidden" id="my-note-btn" type="button" title="Tocando agora">♪</button>
+      <!-- ABA: PERFIL -->
+      <section class="dashboard-tab-content active" id="dashboard-tab-profile">
+        <div class="grid">
+          <!-- LEFT: status + quests -->
+          <div style="display:flex; flex-direction:column; gap:22px;">
+            <div class="panel status-card" id="status-card">
+              <div class="status-banner" id="status-banner"></div>
+              <div class="avatar-ring" id="avatar-ring"><img id="status-avatar" src="" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=window.__FALLBACK_AVATAR||''"></div>
+              <div class="name" id="status-name">
+                <span id="status-name-text"></span>
+                <button class="note-btn hidden" id="my-note-btn" type="button" title="Tocando agora">♪</button>
+              </div>
+              <div class="level-block">
+                <div class="level-num mono" id="level-num">1</div>
+                <div class="level-label">Nível</div>
+                <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar"></div></div>
+                <div class="xp-text" id="xp-text">0 / 100 XP</div>
+                <div class="streak-chip" id="streak-chip">🔥 <span id="streak-num">0</span> dias</div>
+              </div>
+              <button class="ghost accent personalize-btn" id="open-personalize-btn" type="button">✎ Personalizar perfil</button>
             </div>
-            <div class="level-block">
-              <div class="level-num mono" id="level-num">1</div>
-              <div class="level-label">Nível</div>
-              <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar"></div></div>
-              <div class="xp-text" id="xp-text">0 / 100 XP</div>
-              <div class="streak-chip" id="streak-chip">🔥 <span id="streak-num">0</span> dias</div>
-            </div>
-            <button class="ghost accent personalize-btn" id="open-personalize-btn" type="button">✎ Personalizar perfil</button>
-          </div>
 
-          <div class="panel">
-            <h2>Diário de Quests</h2>
-            <div id="quest-list"></div>
-            <form class="add-quest-form" id="add-quest-form">
-              <input type="text" name="title" placeholder="Nova quest diária..." required maxlength="60">
-              <input type="number" name="xp" placeholder="XP" required min="1" max="500" value="10">
-              <button type="submit">+</button>
-            </form>
-          </div>
-        </div>
-
-        <!-- RIGHT: guild + conquistas -->
-        <div id="right-column">
-          <div id="side-default">
             <div class="panel">
-              <h2>Guilda</h2>
-              <div id="guild-list"></div>
+              <h2>Diário de Quests</h2>
+              <div id="quest-list"></div>
+              <form class="add-quest-form" id="add-quest-form">
+                <input type="text" name="title" placeholder="Nova quest diária..." required maxlength="60">
+                <input type="number" name="xp" placeholder="XP" required min="1" max="500" value="10">
+                <button type="submit">+</button>
+              </form>
             </div>
-            <div class="panel" id="achievements-panel-box">
-              <h2>Conquistas</h2>
-              <div class="achievements-grid compact" id="achievements-grid"></div>
+          </div>
+
+          <!-- RIGHT: conquistas -->
+          <div id="right-column">
+            <div id="side-default">
+              <div class="panel" id="achievements-panel-box">
+                <h2>Conquistas</h2>
+                <div class="achievements-grid compact" id="achievements-grid"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- ABA: LEGIÃO -->
+      <section class="dashboard-tab-content" id="dashboard-tab-legion">
+        <div class="legion-layout">
+          <div class="panel legion-panel">
+            <h2>Legião</h2>
+            <div id="guild-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA: ADAPTAPITO -->
+      <section class="dashboard-tab-content" id="dashboard-tab-adaptapito">
+        <div class="adaptapito-panel">
+          <div class="panel">
+            <h2>Adaptapito</h2>
+            <div class="adaptapito-content">
+              <div>
+                <strong>ADAPTAPITO</strong>
+                <span>Esta aba já está integrada ao sistema e pronta para receber o conteúdo que você quiser adicionar.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -1638,11 +1763,31 @@ const firebaseConfig = {
     renderRoute();
   });
 
-  // ---------- ROTEAMENTO (dashboard vs admin) ----------
+  // ---------- ROTEAMENTO (dashboard, abas, admin e conhecimento) ----------
+  const DASHBOARD_TABS = ['perfil', 'legiao', 'adaptapito'];
+
+  function setDashboardTab(tab){
+    if(!DASHBOARD_TABS.includes(tab)) tab = 'perfil';
+
+    DASHBOARD_TABS.forEach((name) => {
+      const content = document.getElementById('dashboard-tab-' + (name === 'legiao' ? 'legion' : name));
+      const button = document.getElementById('dashboard-tab-' + (name === 'legiao' ? 'legion' : name) + '-btn');
+      if(content) content.classList.toggle('active', name === tab);
+      if(button) button.classList.toggle('active', name === tab);
+    });
+  }
+
+  function openDashboardTab(tab){
+    setDashboardTab(tab);
+    const targetHash = tab === 'perfil' ? '' : '#' + tab;
+    if(window.location.hash !== targetHash) window.location.hash = targetHash;
+  }
+
   function renderRoute(){
     const hash = window.location.hash;
     const wantsAdmin = hash === '#admin';
     const wantsKnowledge = hash === '#knowledge';
+    const wantsDashboardTab = hash === '' || DASHBOARD_TABS.includes(hash.slice(1));
 
     document.getElementById('dashboard-view').classList.add('hidden');
     document.getElementById('admin-view').classList.add('hidden');
@@ -1662,9 +1807,23 @@ const firebaseConfig = {
       return;
     }
 
-    if(currentUid){ document.getElementById('dashboard-view').classList.remove('hidden'); }
+    if(currentUid && wantsDashboardTab){
+      const tab = hash === '' ? 'perfil' : hash.slice(1);
+      document.getElementById('dashboard-view').classList.remove('hidden');
+      setDashboardTab(tab);
+      return;
+    }
+
+    if(currentUid){
+      document.getElementById('dashboard-view').classList.remove('hidden');
+      setDashboardTab('perfil');
+    }
   }
+
   window.addEventListener('hashchange', renderRoute);
+  document.getElementById('dashboard-tab-profile-btn').addEventListener('click', () => openDashboardTab('perfil'));
+  document.getElementById('dashboard-tab-legion-btn').addEventListener('click', () => openDashboardTab('legiao'));
+  document.getElementById('dashboard-tab-adaptapito-btn').addEventListener('click', () => openDashboardTab('adaptapito'));
   document.getElementById('admin-link-btn').addEventListener('click', () => { window.location.hash = '#admin'; });
   document.getElementById('admin-back-btn').addEventListener('click', () => { window.location.hash = ''; });
 
@@ -2011,7 +2170,7 @@ const firebaseConfig = {
     }
   }
 
-  // ---------- GUILDA (amigos) ----------
+  // ---------- LEGIÃO (amigos) ----------
   function renderGuild(gsnap){
     const list = document.getElementById('guild-list');
     list.innerHTML = '';
