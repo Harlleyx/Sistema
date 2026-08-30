@@ -615,14 +615,29 @@
   .track-detail-head h2{ font-size:19px; font-weight:700; margin-top:8px; }
   .track-detail-head p{ color:var(--text-dim); font-size:13px; margin-top:6px; line-height:1.5; }
 
-  /* ---------- Conhecimento: Skill Tree RPG infinita ---------- */
-  #knowledge-view{ flex:1; width:100%; max-width:none; margin:0 auto; padding:28px 20px 60px; box-sizing:border-box; }
-  .knowledge-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:12px; max-width:1200px; margin-left:auto; margin-right:auto; }
-  .knowledge-header h1{ font-family:'JetBrains Mono',monospace; font-size:16px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
+  /* ---------- Conhecimento: trilha vertical ---------- */
+  #knowledge-view{
+    flex:1; width:100%; max-width:none; margin:0 auto; padding:28px 20px 80px;
+    box-sizing:border-box;
+  }
+  .knowledge-header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:20px; gap:12px; max-width:1200px; margin-left:auto; margin-right:auto;
+  }
+  .knowledge-header h1{
+    font-family:'JetBrains Mono',monospace; font-size:16px; letter-spacing:2px;
+    color:var(--gold); text-transform:uppercase;
+  }
   .knowledge-header p.sub{ color:var(--text-dim); font-size:12px; margin-top:4px; }
 
-  .track-grid{ max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px; }
-  .track-card{ background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px; cursor:pointer; transition:border-color .15s,transform .15s; text-align:left; }
+  .track-grid{
+    max-width:1200px; margin:0 auto; display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px;
+  }
+  .track-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:18px; cursor:pointer; transition:border-color .15s,transform .15s; text-align:left;
+  }
   .track-card:hover{ border-color:var(--gold); transform:translateY(-2px); }
   .track-card .t-icon{ font-size:26px; margin-bottom:10px; }
   .track-card .t-title{ font-weight:700; font-size:15px; margin-bottom:4px; }
@@ -631,58 +646,160 @@
   .track-card .mini-bar-outer{ height:6px; }
 
   .knowledge-back{ margin-bottom:18px; }
-  .track-detail-head{ max-width:1200px; margin:0 auto 18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .track-detail-head{
+    max-width:1000px; margin:0 auto 22px; display:flex; align-items:center;
+    gap:12px; flex-wrap:wrap;
+  }
   .track-detail-head .t-icon{ font-size:30px; }
   .track-detail-head h2{ font-size:19px; font-weight:700; }
-  .track-detail-head p{ width:100%; color:var(--text-dim); font-size:13px; line-height:1.5; margin:0; }
-
-  /* A área é uma viewport; o conteúdo pode crescer indefinidamente conforme X/Y dos nós. */
-  .obsidian-graph-viewport{
-    position:relative; width:100%; height:min(760px,78vh); min-height:520px;
-    border:1px solid rgba(125,139,160,.12); border-radius:12px;
-    background:
-      radial-gradient(circle at 50% 50%, rgba(255,255,255,.035), transparent 42%),
-      linear-gradient(rgba(125,139,160,.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(125,139,160,.035) 1px, transparent 1px);
-    background-size:auto,32px 32px,32px 32px;
-    overflow:hidden; touch-action:none; cursor:grab; box-shadow:inset 0 0 70px rgba(0,0,0,.35);
+  .track-detail-head p{
+    width:100%; color:var(--text-dim); font-size:13px; line-height:1.5; margin:0;
   }
-  .obsidian-graph-viewport.grabbing{ cursor:grabbing; }
-  .obsidian-graph-canvas{ position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
-  .obsidian-graph-canvas svg{ display:block; width:100%; height:100%; overflow:visible; }
-  .skill-edge{ fill:none; stroke-linecap:round; stroke-linejoin:round; transition:stroke .2s,opacity .2s,filter .2s; }
-  .skill-edge.locked{ stroke:rgba(125,139,160,.22); }
-  .skill-edge.active{ filter:drop-shadow(0 0 4px currentColor); }
-  .skill-edge.done{ filter:drop-shadow(0 0 7px currentColor); }
-  .skill-node{ cursor:pointer; }
-  .skill-node .node-ring{ transition:filter .18s,stroke-width .18s; }
-  .skill-node:hover .node-ring{ filter:drop-shadow(0 0 9px currentColor); stroke-width:3.5; }
-  .skill-node.is-selected .node-ring{ filter:drop-shadow(0 0 14px currentColor); stroke-width:4; }
-  .skill-node.is-locked{ cursor:not-allowed; }
-  .skill-node .node-label{ pointer-events:none; font-family:'Inter',sans-serif; font-weight:700; letter-spacing:.25px; }
-  .skill-node .node-type{ pointer-events:none; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:1px; }
-  .skill-node .node-icon{ pointer-events:none; }
-  .skill-node .node-xp{ pointer-events:none; font-family:'JetBrains Mono',monospace; font-size:9px; }
-  .skill-core{ cursor:default; }
-  .skill-core .core-ring{ animation:core-pulse 2.6s ease-in-out infinite; transform-origin:center; }
-  @keyframes core-pulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:.85;transform:scale(1.08)}}
-  .graph-node-hit{ fill:transparent; cursor:pointer; }
-  .graph-node-hit.is-locked{ cursor:not-allowed; }
-  .graph-controls{ position:absolute; bottom:14px; right:14px; z-index:5; display:flex; flex-direction:column; gap:6px; }
-  .graph-ctrl-btn{ width:34px; height:34px; border-radius:7px; border:1px solid var(--border); background:rgba(18,24,34,.94); color:var(--text-dim); font-size:16px; font-family:'JetBrains Mono',monospace; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
-  .graph-ctrl-btn:hover{ border-color:var(--gold); color:var(--gold); }
-  .graph-zoom-label{ position:absolute; bottom:15px; right:62px; z-index:5; padding:8px 10px; border:1px solid var(--border); border-radius:7px; background:rgba(18,24,34,.88); color:var(--text-dim); font:10px 'JetBrains Mono',monospace; pointer-events:none; }
-  .graph-tooltip{ position:absolute; top:0; left:0; z-index:6; pointer-events:none; background:var(--panel); border:1px solid var(--border); border-radius:7px; padding:8px 11px; font-size:12px; max-width:260px; opacity:0; transform:translateY(4px); transition:opacity .12s,transform .12s; display:flex; flex-direction:column; gap:3px; box-shadow:0 8px 24px rgba(0,0,0,.4); }
-  .graph-tooltip strong{ font-size:12.5px; color:var(--text); }
-  .graph-tooltip span{ font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
-  .graph-tooltip.show{ opacity:1; transform:translateY(0); }
-  .skill-legend{ display:flex; justify-content:center; flex-wrap:wrap; gap:14px; margin-top:10px; color:var(--text-dim); font:10px 'JetBrains Mono',monospace; }
-  .skill-legend span{ display:inline-flex; align-items:center; gap:5px; }
-  .skill-legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; border:1px solid currentColor; }
-  .skill-legend .legend-locked i{ color:#667085; background:#202936; }
-  .skill-legend .legend-available i{ color:#fff; background:#273242; }
-  .skill-legend .legend-done i{ color:#3ecf8e; background:#3ecf8e; }
-  .skill-legend .legend-special i{ color:var(--gold); background:var(--gold); }
+
+  /* Trilha fixa: NÃO há zoom, pan ou viewport interno.
+     O navegador controla o scroll da página normalmente. */
+  .lesson-road{
+    width:100%; max-width:1000px; margin:0 auto;
+  }
+  .lesson-octagon-wrap{
+    position:relative; width:100%; margin:0 auto 28px;
+    padding:12px; background:var(--panel);
+    border:1px solid var(--border); border-radius:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.22);
+  }
+  .lesson-octagon{
+    display:block; width:100%; height:auto; min-height:520px;
+    overflow:visible;
+  }
+  .octagon-title{
+    text-align:center; color:var(--text-dim);
+    font:700 10px 'JetBrains Mono',monospace; letter-spacing:2px;
+    text-transform:uppercase; padding:6px 0 2px;
+  }
+
+  .lesson-scroll-section{
+    position:relative; padding:12px 0 0;
+  }
+  .lesson-scroll-section::before{
+    content:''; position:absolute; left:50%; top:0; bottom:0;
+    width:3px; transform:translateX(-50%);
+    background:linear-gradient(to bottom,
+      rgba(232,179,61,.65),
+      rgba(79,209,255,.25) 45%,
+      rgba(125,139,160,.12));
+    border-radius:999px;
+  }
+  .lesson-scroll-card{
+    position:relative; display:grid; grid-template-columns:1fr 76px 1fr;
+    align-items:center; gap:14px; min-height:150px; margin:0 0 16px;
+  }
+  .lesson-scroll-card:nth-child(even) .lesson-card-copy{ grid-column:3; grid-row:1; }
+  .lesson-scroll-card:nth-child(even) .lesson-node{ grid-column:2; grid-row:1; }
+  .lesson-scroll-card:nth-child(odd) .lesson-card-copy{ grid-column:1; grid-row:1; }
+  .lesson-scroll-card:nth-child(odd) .lesson-node{ grid-column:2; grid-row:1; }
+  .lesson-scroll-card:nth-child(odd)::after,
+  .lesson-scroll-card:nth-child(even)::after{
+    content:''; position:absolute; top:50%; width:calc(50% - 38px);
+    height:1px; background:rgba(125,139,160,.22); z-index:0;
+  }
+  .lesson-scroll-card:nth-child(odd)::after{ right:50%; }
+  .lesson-scroll-card:nth-child(even)::after{ left:50%; }
+
+  .lesson-card-copy{
+    position:relative; z-index:2; background:var(--panel);
+    border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+    min-width:0; box-shadow:0 10px 28px rgba(0,0,0,.18);
+    transition:border-color .16s, transform .16s, opacity .16s;
+  }
+  .lesson-scroll-card:nth-child(odd) .lesson-card-copy{ text-align:right; }
+  .lesson-scroll-card:nth-child(even) .lesson-card-copy{ text-align:left; }
+  .lesson-card-copy.clickable{ cursor:pointer; }
+  .lesson-card-copy.clickable:hover{
+    border-color:var(--gold); transform:translateY(-2px);
+  }
+  .lesson-card-copy.locked{ opacity:.58; }
+  .lesson-card-top{
+    display:flex; align-items:center; gap:8px; margin-bottom:7px;
+  }
+  .lesson-scroll-card:nth-child(odd) .lesson-card-top{ justify-content:flex-end; }
+  .lesson-scroll-card:nth-child(even) .lesson-card-top{ justify-content:flex-start; }
+  .lesson-card-number{
+    color:var(--gold); font:800 9px 'JetBrains Mono',monospace;
+    letter-spacing:1.2px; text-transform:uppercase;
+  }
+  .lesson-card-title{
+    font-size:15px; font-weight:800; line-height:1.25;
+  }
+  .lesson-card-desc{
+    color:var(--text-dim); font-size:11px; line-height:1.5; margin-top:6px;
+  }
+  .lesson-card-meta{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-top:10px; color:var(--text-dim);
+    font:700 9px 'JetBrains Mono',monospace;
+  }
+  .lesson-scroll-card:nth-child(odd) .lesson-card-meta{ justify-content:flex-end; }
+  .lesson-scroll-card:nth-child(even) .lesson-card-meta{ justify-content:flex-start; }
+  .lesson-card-xp{ color:var(--gold); }
+  .lesson-card-done{ color:var(--ok); }
+  .lesson-card-locked{ color:#7b8493; }
+  .lesson-node{
+    position:relative; z-index:3; grid-column:2; width:68px; height:68px;
+    border-radius:50%; margin:auto; display:flex; align-items:center;
+    justify-content:center; background:var(--panel-2);
+    border:3px solid var(--border); box-shadow:0 0 0 7px var(--bg), 0 8px 25px rgba(0,0,0,.32);
+    font-size:25px; user-select:none;
+  }
+  .lesson-node.available{ border-color:var(--cyan); box-shadow:0 0 0 7px var(--bg), 0 0 22px rgba(79,209,255,.22); }
+  .lesson-node.done{ border-color:var(--ok); background:rgba(62,207,142,.13); color:var(--ok); box-shadow:0 0 0 7px var(--bg), 0 0 22px rgba(62,207,142,.18); }
+  .lesson-node.locked{ border-color:#4b5666; color:#7d8ba0; }
+  .lesson-node.milestone{ border-radius:14px; transform:rotate(45deg); }
+  .lesson-node.milestone > span{ transform:rotate(-45deg); }
+  .lesson-node.clickable{ cursor:pointer; }
+  .lesson-node.clickable:hover{ border-color:var(--gold); transform:scale(1.06); }
+  .lesson-node.milestone.clickable:hover{ transform:rotate(45deg) scale(1.06); }
+  .lesson-empty{
+    padding:28px; text-align:center; color:var(--text-dim);
+    background:var(--panel); border:1px dashed var(--border); border-radius:12px;
+  }
+  .lesson-scroll-end{
+    margin:26px auto 0; width:max-content; max-width:100%;
+    padding:10px 16px; border:1px solid var(--border); border-radius:999px;
+    color:var(--text-dim); background:rgba(16,22,31,.9);
+    font:700 9px 'JetBrains Mono',monospace; letter-spacing:1.5px;
+    text-transform:uppercase;
+  }
+
+  @media(max-width:700px){
+    #knowledge-view{ padding-left:12px; padding-right:12px; }
+    .knowledge-header{ align-items:flex-start; }
+    .lesson-octagon-wrap{ padding:6px; }
+    .lesson-octagon{ min-height:0; }
+    .lesson-scroll-section::before{ left:30px; transform:none; }
+    .lesson-scroll-card,
+    .lesson-scroll-card:nth-child(even){
+      display:grid; grid-template-columns:60px 1fr; gap:12px; min-height:120px;
+    }
+    .lesson-scroll-card::after,
+    .lesson-scroll-card:nth-child(even)::after,
+    .lesson-scroll-card:nth-child(odd)::after{ left:30px; right:auto; width:30px; }
+    .lesson-scroll-card .lesson-node,
+    .lesson-scroll-card:nth-child(even) .lesson-node,
+    .lesson-scroll-card:nth-child(odd) .lesson-node{
+      grid-column:1; grid-row:1; width:58px; height:58px;
+    }
+    .lesson-scroll-card .lesson-card-copy,
+    .lesson-scroll-card:nth-child(even) .lesson-card-copy,
+    .lesson-scroll-card:nth-child(odd) .lesson-card-copy{
+      grid-column:2; grid-row:1; text-align:left;
+    }
+    .lesson-scroll-card:nth-child(odd) .lesson-card-top,
+    .lesson-scroll-card:nth-child(even) .lesson-card-top,
+    .lesson-scroll-card:nth-child(odd) .lesson-card-meta,
+    .lesson-scroll-card:nth-child(even) .lesson-card-meta{
+      justify-content:flex-start;
+    }
+  }
 
   /* Admin da Skill Tree */
   .admin-skill-editor{ display:flex; flex-direction:column; gap:10px; padding-top:12px; border-top:1px solid var(--border); }
@@ -2897,245 +3014,185 @@ const firebaseConfig = {
   function renderLessonTree(trackId){
     const wrap=document.getElementById('lesson-tree');
     if(!wrap) return;
+
     const lessons=lessonsByTrack.get(trackId)||[];
     if(!lessons.length){
-      wrap.innerHTML='<p class="empty-note">Nenhuma lição cadastrada nesta trilha ainda.</p>';
+      wrap.innerHTML='<div class="lesson-empty">Nenhuma lição cadastrada nesta trilha ainda.</div>';
       return;
     }
 
     const completed=myCompletedLessons();
     const byId=new Map(lessons.map(l=>[l.id,l]));
-
-    /*
-      ================= OCTÁGONO =================
-      Os 8 primeiros nós formam SEMPRE um octógono regular ao redor do núcleo.
-      Isso ignora X/Y salvos para esses oito nós de propósito: a trilha principal
-      precisa manter o desenho geométrico do octógono.
-
-      Ordem dos vértices:
-        0 = topo
-        1 = superior-direita
-        2 = direita
-        3 = inferior-direita
-        4 = baixo
-        5 = inferior-esquerda
-        6 = esquerda
-        7 = superior-esquerda
-    */
-    const OCTAGON_COUNT=8;
-    const OCTAGON_RADIUS=560;
-    const EXTRA_RADIUS=900;
-
-    function octagonPosition(index){
-      const angle=(-90 + index*45) * Math.PI/180;
-      return {
-        x:Math.round(Math.cos(angle)*OCTAGON_RADIUS),
-        y:Math.round(Math.sin(angle)*OCTAGON_RADIUS)
-      };
-    }
-
-    function extraPosition(index){
-      const i=index-OCTAGON_COUNT;
-      const angle=(-90 + (i%8)*45) * Math.PI/180;
-      const ring=Math.floor(i/8)+1;
-      const radius=EXTRA_RADIUS + (ring-1)*300;
-      return {
-        x:Math.round(Math.cos(angle)*radius),
-        y:Math.round(Math.sin(angle)*radius)
-      };
-    }
+    const track=trackDefs.find(t=>t.id===trackId)||{};
+    const safe=(v)=>escapeHtml(v);
 
     const states=lessons.map((l,index)=>{
       const key=lessonKey(trackId,l.id);
       const isDone=completed.has(key);
       const prereqs=normalizePrerequisites(l.prerequisites);
-      const prereqDone=prereqs.length===0 ? true : prereqs.every(id=>completed.has(lessonKey(trackId,id)));
+      const prereqDone=prereqs.length===0
+        ? true
+        : prereqs.every(id=>completed.has(lessonKey(trackId,id)));
       const isLocked=!isDone && !prereqDone;
       const isAvailable=!isDone && prereqDone;
 
-      // Os oito primeiros nós pertencem ao anel principal do octógono.
-      // Nós extras podem continuar usando X/Y do administrador.
-      let fallback;
-      if(index<OCTAGON_COUNT){
-        fallback=octagonPosition(index);
-      }else{
-        const auto=extraPosition(index);
-        fallback=(Number.isFinite(Number(l.x)) && Number.isFinite(Number(l.y)))
-          ? {x:Number(l.x),y:Number(l.y)}
-          : auto;
-      }
-
-      const x=index<OCTAGON_COUNT
-        ? fallback.x
-        : (Number.isFinite(Number(l.x)) ? Number(l.x) : fallback.x);
-      const y=index<OCTAGON_COUNT
-        ? fallback.y
-        : (Number.isFinite(Number(l.y)) ? Number(l.y) : fallback.y);
-
-      return {...l,key,isDone,isLocked,isAvailable,prereqs,x,y,color:normalizeHexColor(l.color,'#4fd1ff')};
+      return {
+        ...l,
+        key,
+        index,
+        isDone,
+        isLocked,
+        isAvailable,
+        prereqs,
+        color:normalizeHexColor(l.color,'#4fd1ff')
+      };
     });
 
-    const track=trackDefs.find(t=>t.id===trackId)||{};
-    const coreColor=normalizeHexColor(track.color,'#E8B33D');
-    const rawPoints=[{x:0,y:0},...states.map(n=>({x:n.x,y:n.y}))];
-    const minX=Math.min(...rawPoints.map(p=>p.x)),maxX=Math.max(...rawPoints.map(p=>p.x));
-    const minY=Math.min(...rawPoints.map(p=>p.y)),maxY=Math.max(...rawPoints.map(p=>p.y));
-    const PAD=300;
-    const canvasWidth=Math.max(2200,maxX-minX+PAD*2);
-    const canvasHeight=Math.max(1900,maxY-minY+PAD*2);
-    const ox=PAD-minX, oy=PAD-minY;
-    const pt=(x,y)=>({x:x+ox,y:y+oy});
-    const core=pt(0,0);
-    const safe=(v)=>escapeHtml(v);
+    const OCTAGON_COUNT=Math.min(8,states.length);
+    const octStates=states.slice(0,OCTAGON_COUNT);
+    const octSize=700;
+    const cx=350, cy=350, radius=255;
 
-    const straightPath=(a,b)=>`M ${a.x} ${a.y} L ${b.x} ${b.y}`;
-    const edgeKey=(a,b)=>{
-      const A=a.id||'CORE',B=b.id||'CORE';
-      return [A,B].sort().join('::');
-    };
-
-    let svg=`<svg viewBox="0 0 ${canvasWidth} ${canvasHeight}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">`;
-    svg+=`<defs>
-      <filter id="softGlow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="strongGlow"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <pattern id="microGrid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" fill="none" stroke="rgba(125,139,160,.055)" stroke-width="1"/></pattern>
-    </defs>`;
-    svg+=`<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="url(#microGrid)" opacity=".55"/>`;
-
-    // Anéis de fundo discretos.
-    svg+=`<g id="decorative-rings" opacity=".18">
-      <circle cx="${core.x}" cy="${core.y}" r="180" fill="none" stroke="${coreColor}" stroke-width="1"/>
-      <circle cx="${core.x}" cy="${core.y}" r="390" fill="none" stroke="rgba(125,139,160,.45)" stroke-width="1"/>
-      <circle cx="${core.x}" cy="${core.y}" r="${OCTAGON_RADIUS}" fill="none" stroke="rgba(232,179,61,.28)" stroke-width="1"/>
-      <circle cx="${core.x}" cy="${core.y}" r="${OCTAGON_RADIUS+90}" fill="none" stroke="rgba(125,139,160,.18)" stroke-width="1"/>
-    </g>`;
-
-    // Geometria principal: octógono perfeito + 8 raios partindo do núcleo.
-    if(states.length>=1){
-      const octStates=states.slice(0,Math.min(OCTAGON_COUNT,states.length));
-      const octPts=octStates.map(n=>pt(n.x,n.y));
-
-      if(octPts.length>=3){
-        const polygonPoints=octPts.map(p=>`${p.x},${p.y}`).join(' ');
-        svg+=`<polygon points="${polygonPoints}" fill="rgba(232,179,61,.025)" stroke="rgba(232,179,61,.16)" stroke-width="18" filter="url(#strongGlow)"/>`;
-        svg+=`<polygon points="${polygonPoints}" fill="none" stroke="rgba(232,179,61,.72)" stroke-width="3"/>`;
-      }
-
-      svg+=`<g id="octagon-edges">`;
-      const octEdgeSeen=new Set();
-
-      octStates.forEach((n,i)=>{
-        const a=core;
-        const b=octPts[i];
-        const key='CORE::'+n.id;
-        if(!octEdgeSeen.has(key)){
-          octEdgeSeen.add(key);
-          const edgeColor=n.isDone?n.color:(n.isAvailable?n.color:'rgba(125,139,160,.48)');
-          const width=n.isDone?7:(n.isAvailable?4:2.5);
-          const opacity=n.isLocked?.42:.9;
-          svg+=`<path class="skill-edge ${n.isDone?'done':(n.isAvailable?'active':'locked')}" d="${straightPath(a,b)}" stroke="${edgeColor}" stroke-width="${width}" opacity="${opacity}"/>`;
-          if(n.isDone) svg+=`<path d="${straightPath(a,b)}" fill="none" stroke="${n.color}" stroke-width="2" opacity=".95"/>`;
-        }
-      });
-
-      octStates.forEach((n,i)=>{
-        if(octStates.length<3) return;
-        const next=octStates[(i+1)%octStates.length];
-        const a=octPts[i],b=pt(next.x,next.y);
-        const key=edgeKey(n,next);
-        if(octEdgeSeen.has(key)) return;
-        octEdgeSeen.add(key);
-        const done=n.isDone&&next.isDone;
-        const active=n.isAvailable||next.isAvailable||done;
-        const edgeColor=done?'#6fe7ad':(active?(n.isAvailable?n.color:next.color):'rgba(125,139,160,.42)');
-        svg+=`<path class="skill-edge ${done?'done':(active?'active':'locked')}" d="${straightPath(a,b)}" stroke="${edgeColor}" stroke-width="${done?7:(active?4:2.5)}" opacity="${done?.95:.78}"/>`;
-        if(done) svg+=`<path d="${straightPath(a,b)}" fill="none" stroke="#6fe7ad" stroke-width="2" opacity=".95"/>`;
-      });
-      svg+=`</g>`;
+    function octPoint(index){
+      const angle=(-90 + index*45) * Math.PI/180;
+      return {
+        x:cx + Math.cos(angle)*radius,
+        y:cy + Math.sin(angle)*radius
+      };
     }
 
-    // Nós extras continuam respeitando pré-requisitos e posições do administrador.
-    svg+=`<g id="extra-skill-edges">`;
-    const drawnExtraEdges=new Set();
-    states.forEach((n,index)=>{
-      if(index<OCTAGON_COUNT) return;
-      const prereqs=n.prereqs.length?n.prereqs.filter(id=>byId.has(id)):[];
-      const sources=prereqs.length
-        ? prereqs.map(id=>states.find(x=>x.id===id)).filter(Boolean)
-        : [null];
-      sources.forEach(source=>{
-        const a=source?pt(source.x,source.y):core;
-        const b=pt(n.x,n.y);
-        const key=source?edgeKey(source,n):`CORE::${n.id}`;
-        if(drawnExtraEdges.has(key)) return;
-        drawnExtraEdges.add(key);
-        const edgeColor=n.isDone?n.color:(n.isAvailable?n.color:'rgba(125,139,160,.38)');
-        const cls=n.isDone?'done':(n.isAvailable?'active':'locked');
-        svg+=`<path class="skill-edge ${cls}" d="${orthogonalPath(a,b)}" stroke="${edgeColor}" stroke-width="${n.isDone?7:(n.isAvailable?4:2.5)}" opacity="${n.isLocked?.42:.9}"/>`;
-        if(n.isDone) svg+=`<path d="${orthogonalPath(a,b)}" fill="none" stroke="${n.color}" stroke-width="2" opacity=".95"/>`;
+    let svg=`<svg class="lesson-octagon" viewBox="0 0 ${octSize} ${octSize}" xmlns="http://www.w3.org/2000/svg" aria-label="Primeiras lições da trilha">`;
+    svg+=`<defs>
+      <filter id="lessonGlow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <pattern id="lessonGrid" width="36" height="36" patternUnits="userSpaceOnUse">
+        <path d="M36 0H0V36" fill="none" stroke="rgba(125,139,160,.055)" stroke-width="1"/>
+      </pattern>
+    </defs>`;
+    svg+=`<rect x="0" y="0" width="700" height="700" rx="18" fill="url(#lessonGrid)"/>`;
+
+    const pts=octStates.map((n,i)=>octPoint(i));
+
+    if(pts.length>=3){
+      const polygon=pts.map(p=>`${p.x},${p.y}`).join(' ');
+      svg+=`<polygon points="${polygon}" fill="rgba(232,179,61,.035)" stroke="rgba(232,179,61,.12)" stroke-width="22" filter="url(#lessonGlow)"/>`;
+      svg+=`<polygon points="${polygon}" fill="none" stroke="rgba(232,179,61,.72)" stroke-width="3"/>`;
+    }
+
+    svg+=`<circle cx="${cx}" cy="${cy}" r="95" fill="none" stroke="${normalizeHexColor(track.color,'#E8B33D')}" stroke-width="2" opacity=".6"/>`;
+    svg+=`<circle cx="${cx}" cy="${cy}" r="67" fill="rgba(12,17,24,.98)" stroke="${normalizeHexColor(track.color,'#E8B33D')}" stroke-width="3" filter="url(#lessonGlow)"/>`;
+    svg+=`<text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="30">${safe(track.icon||'📘')}</text>`;
+    svg+=`<text x="${cx}" y="${cy+98}" text-anchor="middle" fill="var(--text)" font-size="14" font-family="Inter,sans-serif" font-weight="800">${safe(track.title||'TRILHA')}</text>`;
+    svg+=`<text x="${cx}" y="${cy+117}" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="JetBrains Mono,monospace">INÍCIO DA TRILHA</text>`;
+
+    if(pts.length){
+      pts.forEach((p,i)=>{
+        const n=octStates[i];
+        const next=pts[(i+1)%pts.length];
+        if(pts.length>=3){
+          const done=n.isDone && octStates[(i+1)%octStates.length].isDone;
+          const active=n.isAvailable || octStates[(i+1)%octStates.length].isAvailable || done;
+          const lineColor=done ? '#3ecf8e' : active ? n.color : 'rgba(125,139,160,.34)';
+          svg+=`<line x1="${p.x}" y1="${p.y}" x2="${next.x}" y2="${next.y}" stroke="${lineColor}" stroke-width="${done?7:(active?4:2.5)}" stroke-linecap="round" opacity="${done?.95:.82}"/>`;
+        }
+        const edgeColor=n.isDone ? n.color : (n.isAvailable ? n.color : 'rgba(125,139,160,.42)');
+        svg+=`<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="${edgeColor}" stroke-width="${n.isDone?6:(n.isAvailable?3.5:2)}" stroke-linecap="round" opacity="${n.isLocked?.42:.85}"/>`;
+      });
+
+      octStates.forEach((n,i)=>{
+        const p=pts[i];
+        const r=nodeRadius(n.type);
+        const fill=n.isDone ? n.color : (n.isAvailable ? 'rgba(20,28,40,.98)' : 'rgba(15,20,28,.98)');
+        const stroke=n.isLocked ? '#596577' : n.color;
+        const opacity=n.isLocked ? .62 : 1;
+
+        svg+=`<g class="skill-node ${n.isLocked?'is-locked':''}" data-idx="${i}" style="cursor:pointer;opacity:${opacity};color:${n.color}">
+          <circle cx="${p.x}" cy="${p.y}" r="${r+14}" fill="none" stroke="${n.color}" stroke-width="2" opacity="${n.isDone||n.isAvailable?.25:0}" filter="url(#lessonGlow)"/>
+          <circle cx="${p.x}" cy="${p.y}" r="${r+7}" fill="none" stroke="${n.color}" stroke-width="1.5" opacity=".42"/>
+          <circle class="node-ring" cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>
+          <circle cx="${p.x}" cy="${p.y}" r="${Math.max(3,r-9)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+          ${n.isDone
+            ? `<text x="${p.x}" y="${p.y+7}" text-anchor="middle" font-size="20" fill="#07100b" font-family="JetBrains Mono,monospace" font-weight="900">✓</text>`
+            : n.isLocked
+              ? `<text x="${p.x}" y="${p.y+7}" text-anchor="middle" font-size="18">🔒</text>`
+              : `<text x="${p.x}" y="${p.y+7}" text-anchor="middle" font-size="20">${safe(n.icon||'✦')}</text>`}
+          <text x="${p.x}" y="${p.y+r+19}" text-anchor="middle" fill="${n.isLocked?'#7b8493':'var(--text)'}" font-size="12" font-family="Inter,sans-serif" font-weight="700">${safe(n.title||'Sem nome')}</text>
+          <text x="${p.x}" y="${p.y+r+34}" text-anchor="middle" fill="${n.isLocked?'#657083':n.color}" font-size="9" font-family="JetBrains Mono,monospace">${n.isDone?'CONCLUÍDO':n.isLocked?'BLOQUEADO':'+'+(n.xpValue||0)+' XP'}</text>
+        </g>`;
+      });
+    }
+
+    svg+=`</svg>`;
+
+    let html=`<div class="lesson-road">`;
+    html+=`<div class="lesson-octagon-wrap">
+      <div class="octagon-title">PRIMEIRAS ${OCTAGON_COUNT} LIÇÕES · CAMINHO INICIAL</div>
+      ${svg}
+    </div>`;
+
+    if(states.length>OCTAGON_COUNT){
+      html+=`<div class="lesson-scroll-section" aria-label="Mais lições da trilha">`;
+
+      states.slice(OCTAGON_COUNT).forEach((n)=>{
+        const number=n.index+1;
+        const status=n.isDone
+          ? 'CONCLUÍDO'
+          : n.isLocked
+            ? 'BLOQUEADO'
+            : 'DISPONÍVEL';
+
+        const nodeClass=n.isDone
+          ? 'done'
+          : n.isLocked
+            ? 'locked'
+            : 'available';
+
+        const icon=n.isDone ? '✓' : n.isLocked ? '🔒' : (n.icon||'✦');
+        const typeClass=(n.type==='milestone'||n.type==='boss') ? ' milestone' : '';
+
+        html+=`<article class="lesson-scroll-card">
+          <div class="lesson-card-copy ${n.isLocked?'locked':'clickable'}" data-lesson-id="${safe(n.id)}">
+            <div class="lesson-card-top">
+              <span class="lesson-card-number">LIÇÃO ${number}</span>
+            </div>
+            <div class="lesson-card-title">${safe(n.title||'Sem nome')}</div>
+            <div class="lesson-card-desc">${safe(n.description||'')}</div>
+            <div class="lesson-card-meta">
+              <span class="${n.isDone?'lesson-card-done':n.isLocked?'lesson-card-locked':'lesson-card-xp'}">${status}</span>
+              <span>·</span>
+              <span class="${n.isDone?'lesson-card-done':'lesson-card-xp'}">${n.isDone?'XP RECEBIDO':'+'+(n.xpValue||0)+' XP'}</span>
+            </div>
+          </div>
+          <div class="lesson-node ${nodeClass}${typeClass} ${n.isLocked?'':'clickable'}" data-lesson-id="${safe(n.id)}">
+            <span>${icon}</span>
+          </div>
+        </article>`;
+      });
+
+      html+=`</div><div class="lesson-scroll-end">FIM DAS LIÇÕES CADASTRADAS</div>`;
+    } else {
+      html+=`<div class="lesson-scroll-end">FIM DAS LIÇÕES CADASTRADAS</div>`;
+    }
+
+    html+=`</div>`;
+    wrap.innerHTML=html;
+
+    wrap.querySelectorAll('[data-lesson-id]').forEach((el)=>{
+      const id=el.dataset.lessonId;
+      const lesson=states.find(x=>x.id===id);
+      if(!lesson || lesson.isLocked) return;
+      el.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        openLessonModal(trackId,lesson,lesson.isDone,lesson.isLocked);
       });
     });
-    svg+=`</g>`;
 
-    // Núcleo central.
-    svg+=`<g class="skill-core">
-      <circle class="core-ring" cx="${core.x}" cy="${core.y}" r="86" fill="none" stroke="${coreColor}" stroke-width="2" opacity=".85"/>
-      <circle cx="${core.x}" cy="${core.y}" r="64" fill="rgba(12,17,24,.97)" stroke="${coreColor}" stroke-width="3" filter="url(#softGlow)"/>
-      <circle cx="${core.x}" cy="${core.y}" r="52" fill="none" stroke="rgba(232,179,61,.16)" stroke-width="1"/>
-      <text x="${core.x}" y="${core.y+10}" text-anchor="middle" font-size="30">${safe(track.icon||'📘')}</text>
-      <text x="${core.x}" y="${core.y+100}" text-anchor="middle" fill="var(--text)" font-size="14" font-family="Inter,sans-serif" font-weight="800">${safe(track.title||'TRILHA')}</text>
-      <text x="${core.x}" y="${core.y+119}" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="JetBrains Mono,monospace">NÚCLEO</text>
-    </g>`;
-
-    // Nós.
-    svg+=`<g id="skill-nodes">`;
-    states.forEach((n,idx)=>{
-      const p=pt(n.x,n.y), r=nodeRadius(n.type), c=n.color;
-      const fill=n.isDone?c:(n.isAvailable?'rgba(20,28,40,.96)':'rgba(15,20,28,.96)');
-      const stroke=n.isLocked?'rgba(102,112,133,.8)':c;
-      const opacity=n.isLocked?.6:1;
-      const cls=`skill-node ${n.isLocked?'is-locked':''} ${n.isSelected?'is-selected':''}`;
-      if(n.isAvailable||n.isDone) svg+=`<circle cx="${p.x}" cy="${p.y}" r="${r+13}" fill="none" stroke="${c}" stroke-width="2" opacity=".26" filter="url(#softGlow)"/>`;
-      if(idx<OCTAGON_COUNT) svg+=`<circle cx="${p.x}" cy="${p.y}" r="${r+7}" fill="none" stroke="${c}" stroke-width="1.5" opacity=".42"/>`;
-      if(n.type==='milestone'||n.type==='boss') svg+=`<circle cx="${p.x}" cy="${p.y}" r="${r+5}" fill="none" stroke="${c}" stroke-width="1.5" opacity=".5"/>`;
-      svg+=`<g class="${cls}" data-idx="${idx}" data-id="${safe(n.id)}" style="color:${c};opacity:${opacity}">`;
-      svg+=`<circle class="node-ring" cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
-      svg+=`<circle cx="${p.x}" cy="${p.y}" r="${Math.max(3,r-9)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`;
-      if(n.isDone) svg+=`<text x="${p.x}" y="${p.y+7}" text-anchor="middle" font-size="20" fill="#07100b" font-family="JetBrains Mono,monospace" font-weight="900">✓</text>`;
-      else if(n.isLocked) svg+=`<text x="${p.x}" y="${p.y+7}" text-anchor="middle" font-size="18" fill="#8490a2">🔒</text>`;
-      else svg+=`<text class="node-icon" x="${p.x}" y="${p.y+7}" text-anchor="middle" font-size="20">${safe(n.icon||'✦')}</text>`;
-      const labelY=p.y+r+20;
-      svg+=`<text class="node-label" x="${p.x}" y="${labelY}" text-anchor="middle" fill="${n.isLocked?'#7b8493':'var(--text)'}" font-size="12">${safe(n.title||'Sem nome')}</text>`;
-      svg+=`<text class="node-type" x="${p.x}" y="${labelY+14}" text-anchor="middle" fill="${n.isLocked?'#657083':c}">${safe(nodeTypeLabel(n.type))}</text>`;
-      if(!n.isLocked) svg+=`<text class="node-xp" x="${p.x}" y="${labelY+27}" text-anchor="middle" fill="${n.isDone?'#6fe7ad':c}">${n.isDone?'CONCLUÍDO':'+'+(n.xpValue||0)+' XP'}</text>`;
-      svg+=`</g>`;
-    });
-    svg+=`</g></svg>`;
-
-    wrap.innerHTML=`<div class="obsidian-graph-viewport" id="graph-viewport">
-      <div class="obsidian-graph-canvas" id="graph-canvas" style="width:${canvasWidth}px;height:${canvasHeight}px;">${svg}</div>
-      <div class="graph-controls"><button type="button" class="graph-ctrl-btn" id="graph-zoom-in">+</button><button type="button" class="graph-ctrl-btn" id="graph-zoom-out">−</button><button type="button" class="graph-ctrl-btn" id="graph-zoom-reset">⤾</button></div>
-      <div class="graph-zoom-label">100%</div><div class="graph-tooltip" id="graph-tooltip"></div>
-    </div>
-    <div class="skill-legend"><span class="legend-locked"><i></i>Bloqueado</span><span class="legend-available"><i></i>Disponível</span><span class="legend-done"><i></i>Concluído</span><span class="legend-special"><i></i>Marco/Especial</span></div>`;
-
-    const viewportEl=document.getElementById('graph-viewport'),canvasEl=document.getElementById('graph-canvas');
-    const controls=setupGraphPanZoom(viewportEl,canvasEl,canvasWidth,canvasHeight);
-    document.getElementById('graph-zoom-in').addEventListener('click',controls.zoomIn);
-    document.getElementById('graph-zoom-out').addEventListener('click',controls.zoomOut);
-    document.getElementById('graph-zoom-reset').addEventListener('click',controls.reset);
-
-    const tooltipEl=document.getElementById('graph-tooltip');
+    // Clique nos nós do octógono.
     wrap.querySelectorAll('.skill-node').forEach((nodeEl)=>{
-      const idx=parseInt(nodeEl.dataset.idx,10),n=states[idx];
-      const status=n.isDone?'✓ Concluída':(n.isLocked?'🔒 Bloqueada — pré-requisitos pendentes':`+${n.xpValue||0} XP disponível`);
-      nodeEl.addEventListener('pointerenter',()=>{tooltipEl.innerHTML=`<strong>${safe(n.title||'')}</strong><span>${status} · ${safe(nodeTypeLabel(n.type))}</span>`;tooltipEl.classList.add('show');});
-      nodeEl.addEventListener('pointermove',(e)=>{const rect=viewportEl.getBoundingClientRect();tooltipEl.style.left=(e.clientX-rect.left+14)+'px';tooltipEl.style.top=(e.clientY-rect.top+14)+'px';});
-      nodeEl.addEventListener('pointerleave',()=>tooltipEl.classList.remove('show'));
+      const idx=parseInt(nodeEl.dataset.idx,10);
+      const n=octStates[idx];
+      if(!n) return;
       nodeEl.addEventListener('click',(e)=>{
         e.stopPropagation();
-        wrap.querySelectorAll('.skill-node.is-selected').forEach(x=>x.classList.remove('is-selected'));
-        nodeEl.classList.add('is-selected');
         openLessonModal(trackId,n,n.isDone,n.isLocked);
       });
     });
